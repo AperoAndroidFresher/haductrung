@@ -163,7 +163,7 @@ fun ProfileScreen() {
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             LabeledInput(
-                label = "NAME",
+                label = "NAME TRUNG",
                 value = name,
                 onValueChange = { name = it },
                 placeholderText = "Enter your name...",
