@@ -74,6 +74,7 @@ fun AppHeader(
         )
         Image(
             painter = painterResource(id = iconResId),
+            
             contentDescription = "Header Icon",
 
             modifier = Modifier
