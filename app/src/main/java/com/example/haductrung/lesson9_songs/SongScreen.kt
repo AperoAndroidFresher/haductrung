@@ -1,5 +1,6 @@
 package com.example.haductrung.lesson9_songs
 
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,10 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Shapes
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,105 +34,61 @@ data class Song(
     val title: String,
     val artist: String,
     val duration: String,
-    val coverResId: Int
+    val idanh: Int
 )
 
-@Composable
-fun SongGridItem(song: Song) {
-    Column(
-        modifier = Modifier.padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box() {
-            Image(
-                painter = painterResource(id = song.coverResId),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp))
-            )
-            Image(
-                painter = painterResource(id = R.drawable.bacham),
-                contentDescription = "moreoption",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(40.dp).clip(CircleShape)
-                    .align(alignment = Alignment.TopEnd).clickable { },
-
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = song.title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 30.sp,
-            maxLines = 1
-        )
-        Text(
-            text = song.artist,
-            color = Color.Gray,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(modifier = Modifier.height(7.dp))
-        Text(
-            text = song.duration,
-            color = Color.LightGray,
-            fontSize = 20.sp
-        )
-    }
-}
 
 @Composable
-fun DeleteSong(onDeleteClick : ()->Unit) {
-    Column(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(color = Color.Black))  {
-        Row(modifier = Modifier.clickable (onClick = onDeleteClick)) {
+fun DeleteSong(onDeleteClick: () -> Unit) {
+    Column {
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onDeleteClick)
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Image(
                 painter = painterResource(R.drawable.remove),
                 contentDescription = "xoa",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(25.dp)
-                    .clip(CircleShape).padding(2.dp).padding(start = 2.dp, end = 2.dp),
+                modifier = Modifier.size(30.dp)
             )
-
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "Remove from playlist",
                 color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(end= 3.dp)
-
+                fontSize = 15.sp
             )
         }
-        Row(modifier = Modifier) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Image(
                 painter = painterResource(R.drawable.share),
-                contentDescription = "xoa",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(25.dp)
-                    .clip(CircleShape).padding(2.dp).padding(start = 2.dp, end = 2.dp),
+                contentDescription = "Share",
+                modifier = Modifier.size(30.dp)
             )
-
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "Share (coming soon)",
-                color = Color.LightGray,
-                fontSize = 10.sp,
-                modifier = Modifier.padding(end= 3.dp)
-
+                color = Color.Gray,
+                fontSize = 15.sp
             )
         }
     }
-
 }
 
 @Composable
 fun SongItem(
     song: Song,
     modifier: Modifier = Modifier,
-    //onDeleteRequest: (Song)->Unit
+    isMenuExpanded: Boolean,
+    onDismissMenu: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onMOPClick: () -> Unit,
+    isSort: Boolean
+
 ) {
     Row(
         modifier
@@ -143,7 +97,7 @@ fun SongItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painterResource(song.coverResId),
+            painterResource(song.idanh),
             song.title,
             Modifier
                 .size(56.dp)
@@ -175,13 +129,102 @@ fun SongItem(
                 color = Color.LightGray,
                 fontSize = 14.sp
             )
-            Image(
-                painter = painterResource(R.drawable.bacham),
-                contentDescription = "more option",
-                modifier =Modifier.size(20.dp)
-
-            )
+            Box {
+                val iconResId3 = if (isSort) R.drawable.hbg else R.drawable.bacham
+                val contenDes3 = if (isSort) "sortting" else "normal"
+                Image(
+                    painter = painterResource(iconResId3),
+                    contentDescription = contenDes3,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            if (!isSort) {
+                                onMOPClick()
+                            }
+                        }
+                )
+                if(!isSort) {
+                    DropdownMenu(
+                        expanded = isMenuExpanded,
+                        onDismissRequest = onDismissMenu,
+                        modifier = Modifier
+                            .background(color = Color.Black)
+                            .clip(RoundedCornerShape(16.dp)),
+                    ) {
+                        DeleteSong(onDeleteClick = onDeleteClick)
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun SongGridItem(
+    song: Song,
+    onMOPClick: () -> Unit,
+    isMenuExpanded: Boolean,
+    onDismissMenu: () -> Unit,
+    onDeleteClick: () -> Unit,
+
+
+    ) {
+    Column(
+        modifier = Modifier.padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box {
+            Image(
+                painter = painterResource(id = R.drawable.grainydays),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+            )
+            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                Image(
+                    painter = painterResource(id = R.drawable.bacham),
+                    contentDescription = "moreoption",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .align(alignment = Alignment.TopEnd)
+                        .clickable(onClick = onMOPClick),
+                )
+                DropdownMenu(
+                    expanded = isMenuExpanded,
+                    onDismissRequest = onDismissMenu,
+                    modifier = Modifier
+                        .background(color = Color.Black)
+                        .clip(RoundedCornerShape(16.dp)),
+                ) {
+                    DeleteSong(onDeleteClick = onDeleteClick)
+                }
+
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = song.title,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 30.sp,
+            maxLines = 1
+        )
+        Text(
+            text = song.artist,
+            color = Color.Gray,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.height(7.dp))
+        Text(
+            text = song.duration,
+            color = Color.LightGray,
+            fontSize = 20.sp
+        )
     }
 }
 
@@ -193,24 +236,23 @@ fun SongScreen() {
             Song("Coffee", "Kainbeats", "04:30", R.drawable.cofee),
             Song("Raindrops", "Rainyyxx", "00:30", R.drawable.raindrop),
             Song("Tokyo", "SmYang", "04:02", R.drawable.tokyo),
-            Song("Lullaby", "Iamfinenow", "04:02", R.drawable.lulabby),
-            Song("Coffee", "Kainbeats", "04:30", R.drawable.cofee),
-            Song("Raindrops", "Rainyyxx", "00:30", R.drawable.raindrop),
-            Song("Tokyo", "SmYang", "04:02", R.drawable.tokyo),
-            Song("Lullaby", "Iamfinenow", "04:02", R.drawable.lulabby),
-            Song("Coffee", "Kainbeats", "04:30", R.drawable.cofee),
-            Song("Raindrops", "Rainyyxx", "00:30", R.drawable.raindrop),
-            Song("Tokyo", "SmYang", "04:02", R.drawable.tokyo),
-            Song("Lullaby", "Iamfinenow", "04:02", R.drawable.lulabby),
-            Song("Coffee", "Kainbeats", "04:30", R.drawable.cofee),
-            Song("Raindrops", "Rainyyxx", "00:30", R.drawable.raindrop),
-            Song("Tokyo", "SmYang", "04:02", R.drawable.tokyo),
-            Song("Lullaby", "Iamfinenow", "04:02", R.drawable.lulabby)
-        )
+            Song("Lullaby", "Iamfinenow", "04:02", R.drawable.list),
+            Song("Rainy dayss", "Moody,", "04:30", R.drawable.grainydays),
+            Song("Coffeee", "Kainbeats", "04:30", R.drawable.cofee),
+            Song("Raindropss", "Rainyyxx", "00:30", R.drawable.remove),
+            Song("Tokyoo", "SmYang", "04:02", R.drawable.tokyo),
+            Song("Lullabyuy", "Iamfinenow", "04:02", R.drawable.lulabby),
+            Song("Rainy daysđ", "Moody,", "04:30", R.drawable.grainydays),
+            Song("Coffeefd", "Kainbeats", "04:30", R.drawable.cofee),
+            Song("Raindropfds", "Rainyyxx", "00:30", R.drawable.raindrop),
+            Song("Tokyhho", "SmYang", "04:02", R.drawable.tokyo),
+            Song("Lullahhby", "Iamfinenow", "04:02", R.drawable.list),
+
+            )
     }
     var isGridView by remember { mutableStateOf(false) }
-    var isdelete by remember{ mutableStateOf<Song?>(null) }
-
+    var songWithMenu by remember { mutableStateOf<Song?>(null) }
+    var isSort by remember { mutableStateOf(false) }
     Column(
         Modifier
             .fillMaxSize()
@@ -246,12 +288,16 @@ fun SongScreen() {
                         .clickable { isGridView = !isGridView }
                 )
 
-
+                val iconResID2 = if (isSort) R.drawable.tickv else R.drawable.sort1
+                val content2 = if (isSort) "Sorting" else "Normal"
                 Image(
-                    painter = painterResource(R.drawable.sort1),
-                    contentDescription = "Sort",
+                    painter = painterResource(iconResID2),
+                    contentDescription = content2,
                     modifier = Modifier
                         .size(30.dp)
+                        .clickable {
+                            isSort=!isSort
+                        }
 
                 )
             }
@@ -262,13 +308,35 @@ fun SongScreen() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(songList.size) { index ->
-                    SongGridItem(song = songList[index])
+                    val song1 = songList[index]
+                    SongGridItem(
+                        song = song1,
+                        onMOPClick = { songWithMenu = song1 },
+                        isMenuExpanded = (songWithMenu == song1),
+                        onDismissMenu = { songWithMenu = null },
+                        onDeleteClick = {
+                            songList.remove(song1)
+                            songWithMenu = null
+                        }
+
+                    )
                 }
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(songList.size) { index ->
-                    SongItem(song = songList[index])
+                    val song1 = songList[index]
+                    SongItem(
+                        song = song1,
+                        onMOPClick = { songWithMenu = song1 },
+                        isMenuExpanded = (songWithMenu == song1),
+                        onDismissMenu = { songWithMenu = null },
+                        onDeleteClick = {
+                            songList.remove(song1)
+                            songWithMenu = null
+                        },
+                        isSort = isSort
+                    )
                 }
             }
         }
@@ -280,11 +348,10 @@ fun SongScreen() {
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 fun PreviewSongScreen() {
-    val ss = Song("Rainy days", "Moody,", "04:30", R.drawable.grainydays)
+    //val ss = Song("Rainy days", "Moody,", "04:30", R.drawable.grainydays)
     HaductrungTheme {
-         SongScreen()
+        SongScreen()
         // SongGridItem(song = ss)
-        //DeleteSong()
+        //DeleteSong(onDeleteClick = {})
     }
 }
-
