@@ -53,10 +53,14 @@ fun AuthScreen() {
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
     var emailError by remember { mutableStateOf<String?>(null) }
 
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isConfirmPasswordVisible by remember { mutableStateOf(false) }
+
     when (currentScreen) {
         Screen.Welcome -> WelcomeScreen(
             onTimeout = { currentScreen = Screen.Login }
         )
+
         Screen.Login -> LoginScreen(
             username = username,
             onUsernameChange = { username = it },
@@ -64,7 +68,7 @@ fun AuthScreen() {
             onPasswordChange = { password = it },
             isChecked = rememberMe,
             onCheckedChange = { rememberMe = it },
-            onLoginClick = {  },
+            onLoginClick = { },
             SetNews = {
                 username = ""
                 password = ""
@@ -75,8 +79,12 @@ fun AuthScreen() {
                 confirmPasswordError = null
                 emailError = null
                 currentScreen = Screen.SignUp
-            }
+                isPasswordVisible = false
+            },
+            isPasswordVisible = isPasswordVisible,
+            onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible }
         )
+
         Screen.SignUp -> SignupScreen(
             username = username,
             onUsernameChange = { username = it },
@@ -100,55 +108,59 @@ fun AuthScreen() {
                 if (username.isBlank() || !username.matches(Regex("^[a-zA-Z0-9]+$"))) {
                     usernameError = "invalid format"
                     isValid = false
-                    username=""
-
+                    username = ""
                 }
 
-                if (password.isBlank() || !password.matches(Regex("^[a-zA-Z0-9]$"))) {
+                if (password.isBlank() || !password.matches(Regex("^[a-zA-Z0-9]+$"))) {
                     passwordError = "invalid format"
                     isValid = false
-                    password=""
-
+                    password = ""
                 }
 
                 if (confirmPassword != password) {
                     confirmPasswordError = "invalid format"
                     isValid = false
-                    confirmPassword=""
+                    confirmPassword = ""
                 }
 
                 if (email.isBlank() || !email.matches(Regex("^[a-zA-Z0-9._-]+@apero\\.vn$"))) {
                     emailError = "invalid email"
                     isValid = false
-                    email=""
+                    email = ""
                 }
 
                 if (isValid) {
                     currentScreen = Screen.Login
                 }
+            },
+
+            isPasswordVisible = isPasswordVisible,
+            onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+            isConfirmPasswordVisible = isConfirmPasswordVisible,
+            onToggleConfirmPasswordVisibility = {
+                isConfirmPasswordVisible = !isConfirmPasswordVisible
             }
         )
     }
 }
-
-
-@Composable
-fun Header(title: String) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(top = 30.dp)) {
-        Image(
-            painterResource(R.drawable.logochaomung),
-            contentDescription = "Header logo",
-            modifier = Modifier.size(300.dp)
-        )
-        Text(
-            title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            modifier = Modifier.padding(top = 230.dp)
-        )
+    @Composable
+    fun Header(title: String) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(top = 30.dp)) {
+            Image(
+                painterResource(R.drawable.logochaomung),
+                contentDescription = "Header logo",
+                modifier = Modifier.size(300.dp)
+            )
+            Text(
+                title,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
+                modifier = Modifier.padding(top = 230.dp)
+            )
+        }
     }
-}
+
 
 @Composable
 fun TextSignup(
@@ -170,10 +182,23 @@ fun TextSignup(
         )
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewAuth() {
     HaductrungTheme {
-        AuthScreen()
+       // AuthScreen()
+        LoginScreen("fdf",
+            onUsernameChange = { },
+             "password",
+            onPasswordChange = { },
+            isChecked = true,
+            onCheckedChange = {  },
+            onLoginClick = { },
+            SetNews = {
+            },
+            isPasswordVisible = true,
+            onTogglePasswordVisibility = {  })
     }
 }
+

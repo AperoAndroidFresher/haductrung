@@ -23,7 +23,8 @@ fun FormatTextField(
     iconResId: Int,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     isError: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -59,6 +60,7 @@ fun FormatTextField(
                 }
             },
             visualTransformation = visualTransformation,
+            trailingIcon = trailingIcon,
             singleLine = true,
             textStyle = TextStyle(
                 color = Color.White,
