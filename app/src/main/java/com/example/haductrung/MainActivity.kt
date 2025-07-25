@@ -4,22 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.haductrung.ui.theme.HaductrungTheme
@@ -33,184 +27,153 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ProfileScreen()
+                    AuthScreen()
                 }
             }
         }
     }
 }
 
+enum class Screen {
+    Welcome, Login, SignUp
+}
+
 @Composable
-fun AppHeader(
-    title: String,
-    iconResId: Int,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 20.dp)
-    ) {
-        Text(
-            text = title,
-            color = Color.Black,
-            fontSize = 25.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Center)
+fun AuthScreen() {
+    var currentScreen by remember { mutableStateOf(Screen.Welcome) }
+
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var rememberMe by remember { mutableStateOf(true) }
+
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+
+    when (currentScreen) {
+        Screen.Welcome -> WelcomeScreen(
+            onTimeout = { currentScreen = Screen.Login }
         )
+        Screen.Login -> LoginScreen(
+            username = username,
+            onUsernameChange = { username = it },
+            password = password,
+            onPasswordChange = { password = it },
+            isChecked = rememberMe,
+            onCheckedChange = { rememberMe = it },
+            onLoginClick = {  },
+            SetNews = {
+                username = ""
+                password = ""
+                confirmPassword = ""
+                email = ""
+                usernameError = null
+                passwordError = null
+                confirmPasswordError = null
+                emailError = null
+                currentScreen = Screen.SignUp
+            }
+        )
+        Screen.SignUp -> SignupScreen(
+            username = username,
+            onUsernameChange = { username = it },
+            password = password,
+            onPasswordChange = { password = it },
+            confirmPassword = confirmPassword,
+            onConfirmPasswordChange = { confirmPassword = it },
+            email = email,
+            onEmailChange = { email = it },
+            usernameError = usernameError,
+            passwordError = passwordError,
+            confirmPasswordError = confirmPasswordError,
+            emailError = emailError,
+            onSignUpClick = {
+                usernameError = null
+                passwordError = null
+                confirmPasswordError = null
+                emailError = null
+                var isValid = true
+
+                if (username.isBlank() || !username.matches(Regex("^[a-zA-Z0-9]+$"))) {
+                    usernameError = "invalid format"
+                    isValid = false
+                    username=""
+
+                }
+
+                if (password.isBlank() || !password.matches(Regex("^[a-zA-Z0-9]$"))) {
+                    passwordError = "invalid format"
+                    isValid = false
+                    password=""
+
+                }
+
+                if (confirmPassword != password) {
+                    confirmPasswordError = "invalid format"
+                    isValid = false
+                    confirmPassword=""
+                }
+
+                if (email.isBlank() || !email.matches(Regex("^[a-zA-Z0-9._-]+@apero\\.vn$"))) {
+                    emailError = "invalid email"
+                    isValid = false
+                    email=""
+                }
+
+                if (isValid) {
+                    currentScreen = Screen.Login
+                }
+            }
+        )
+    }
+}
+
+
+@Composable
+fun Header(title: String) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(top = 30.dp)) {
         Image(
-            painter = painterResource(id = iconResId),
-            contentDescription = "Header Icon",
-            modifier = Modifier
-                .size(27.dp)
-                .align(Alignment.CenterEnd)
+            painterResource(R.drawable.logochaomung),
+            contentDescription = "Header logo",
+            modifier = Modifier.size(300.dp)
         )
-    }
-}
-
-@Composable
-fun CircularProfileImage(imageResId: Int, size: Dp = 120.dp, modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(id = imageResId),
-        contentDescription = "Profile Image",
-        contentScale = ContentScale.Crop,
-        modifier = modifier
-            .size(size)
-            .clip(CircleShape)
-    )
-}
-
-@Composable
-fun LabeledInput(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholderText: String,
-    modifier: Modifier = Modifier,
-    height: Dp? = null
-) {
-    val textFieldModifier = if (height != null) {
-        Modifier
-            .fillMaxWidth()
-            .height(height)
-    } else {
-        Modifier.fillMaxWidth()
-    }
-
-    Column(modifier = modifier) {
         Text(
-            text = label,
-            color = Color.Gray,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
-        )
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(placeholderText, fontSize = 12.sp, color = Color.Gray) },
-            shape = RoundedCornerShape(16.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFedf4f5),
-                unfocusedContainerColor = Color(0xFFedf4f5),
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
-            ),
-            modifier = textFieldModifier
-                .border(
-                    width = 1.dp,
-                    color = Color(0xFF576061),
-                    shape = RoundedCornerShape(16.dp)
-                )
+            title,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            modifier = Modifier.padding(top = 230.dp)
         )
     }
 }
 
 @Composable
-fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Black
-        )
+fun TextSignup(
+    promptText: String,
+    actionText: String,
+    onActionClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.padding(bottom = 40.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text, color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
-    }
-}
-
-@Composable
-fun ProfileScreen() {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var university by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFdaf2f5))
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AppHeader(title = "MY INFORMATION", iconResId = R.drawable.icon)
-        Spacer(modifier = Modifier.height(10.dp))
-        CircularProfileImage(imageResId = R.drawable.meo2)
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            LabeledInput(
-                label = "NAME",
-                value = name,
-                onValueChange = { name = it },
-                placeholderText = "Enter your name...",
-                modifier = Modifier.weight(1f)
-            )
-            LabeledInput(
-                label = "PHONE NUMBER",
-                value = phone,
-                onValueChange = { phone = it },
-                placeholderText = "Your phone number...",
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LabeledInput(
-            label = "UNIVERSITY NAME",
-            value = university,
-            onValueChange = { university = it },
-            placeholderText = "Your University name..."
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        LabeledInput(
-            label = "DESCRIBE YOURSELF",
-            value = description,
-            onValueChange = { description = it },
-            placeholderText = "Enter a description...",
-            height = 200.dp
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        PrimaryButton(
-            text = "SUBMIT",
-            onClick = { },
-            modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp)
+        Text(promptText, fontSize = 18.sp, color = Color.White)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            actionText,
+            color = Color(0xFF06A0B5),
+            fontSize = 20.sp,
+            modifier = Modifier.clickable(onClick = onActionClick)
         )
     }
 }
-
-@Preview(showBackground = true, widthDp = 390, heightDp = 844)
+@Preview(showBackground = true)
 @Composable
-fun PreviewProfileScreen() {
+fun PreviewAuth() {
     HaductrungTheme {
-        ProfileScreen()
+        AuthScreen()
     }
 }
