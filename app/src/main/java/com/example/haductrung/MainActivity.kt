@@ -1,5 +1,6 @@
 package com.example.haductrung
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,6 +25,9 @@ import com.example.haductrung.signup_login.WelcomeScreen
 import com.example.haductrung.song.Song
 import com.example.haductrung.song.SongScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 
 
@@ -98,11 +102,48 @@ fun AppNavigator() {
     var isEditing by remember { mutableStateOf(false) }
     var popup by remember { mutableStateOf(false) }
     var universityError by remember { mutableStateOf<String?>(null) }
+    val activity = LocalActivity.current as? Activity
 
     NavDisplay(
         backStack = backStack,
-        onBack = { backStack.removeLastOrNull() }
+        onBack = {
+            when (backStack.lastOrNull()) {
+                is Screen.SignUp,
+                is Screen.Profile -> {
+                    if (backStack.isNotEmpty()) backStack.removeAt(backStack.lastIndex)
+                }
+
+                is Screen.Home,
+                is Screen.Library,
+                is Screen.Playlist -> {
+                    backStack.clear()
+                    activity?.finish()
+                }
+
+                else -> {
+                    if (backStack.isNotEmpty()) backStack.removeAt(backStack.lastIndex)
+                }
+            }
+        }
     ) { screen ->
+        BackHandler {
+            when (backStack.lastOrNull()) {
+                is Screen.Home,
+                is Screen.Library,
+                is Screen.Playlist -> {
+                    backStack.clear()
+                    activity?.finish()
+                }
+
+                else -> {
+                    if (backStack.isNotEmpty()) {
+                        backStack.removeAt(backStack.lastIndex)
+                    } else {
+                        activity?.finish()
+                    }
+                }
+            }
+        }
         when (screen) {
             is Screen.Welcome -> WelcomeScreen(
                 onTimeout = {
@@ -123,6 +164,7 @@ fun AppNavigator() {
 
                 onLoginClick = {
                     if (username != "" && password != "") {
+                        backStack.clear()
                         backStack.add(Screen.Home)
                     }
                 },//trick
@@ -189,7 +231,9 @@ fun AppNavigator() {
                     if (isValid) {
                         backStack.add(Screen.Login)
                     }
+
                 },
+                onBack = { backStack.removeLastOrNull() },
                 isPasswordVisible = isPasswordVisible,
                 onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
                 isConfirmPasswordVisible = isConfirmPasswordVisible,
@@ -247,7 +291,7 @@ fun AppNavigator() {
             )
 
             is Screen.Library -> LibraryScreen(
-                onBack = { backStack.removeLastOrNull() }
+
             )
 
             is Screen.Playlist -> SongScreen(
@@ -256,12 +300,12 @@ fun AppNavigator() {
                 isSortMode = isSortMode,
                 songWithMenu = songWithMenu,
                 onToggleViewClick = { isGridView = !isGridView },
-                onToggleSortClick = {
+                onToggleSortClick = {isSortMode = !isSortMode
                 },
-                onMoreClick = { song1 -> songWithMenu = song1.idanh },
+                onMoreClick = { song1 -> songWithMenu = song1.id },
                 onDismissMenu = { songWithMenu = null },
                 onDeleteClick = { song1 ->
-                    songList.remove(song1)
+                    songList.removeIf{it.id==song1.id}
                     songWithMenu = null
                 },
                 onNavigateToProfile = { backStack.add(Screen.Profile) }
@@ -269,7 +313,6 @@ fun AppNavigator() {
         }
     }
 }
-
 @Composable
 fun NavDisplay(
     backStack: SnapshotStateList<Screen>,
@@ -280,26 +323,6 @@ fun NavDisplay(
     if (currentScreen != null) {
         Crossfade(targetState = currentScreen, label = "navigation") { screen ->
             entryProvider(screen)
-        }
-    }
-}
-
-
-
-@Composable
-fun PlaylistScreen(onBack: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.Green),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "Playlist Screen",
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.Black
-            )
-            Spacer(Modifier.height(16.dp))
-            Button(onClick = onBack) { Text("Go Back") }
         }
     }
 }

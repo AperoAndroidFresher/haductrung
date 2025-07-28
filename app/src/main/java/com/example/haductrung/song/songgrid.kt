@@ -31,7 +31,7 @@ import com.example.haductrung.R
 @Composable
 fun SongGridItem(
     song: Song,
-    onMOPClick: () -> Unit,
+    onMoreClick: () -> Unit,
     isMenuExpanded: Boolean,
     onDismissMenu: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -60,7 +60,7 @@ fun SongGridItem(
                         .size(40.dp)
                         .clip(CircleShape)
                         .align(alignment = Alignment.TopEnd)
-                        .clickable(onClick = onMOPClick),
+                        .clickable(onClick = onMoreClick),
                 )
                 DropdownMenu(
                     expanded = isMenuExpanded,

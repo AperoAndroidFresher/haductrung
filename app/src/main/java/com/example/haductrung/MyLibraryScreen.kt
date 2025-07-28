@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LibraryScreen(onBack: () -> Unit) {
+fun LibraryScreen() {
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Gray),
         contentAlignment = Alignment.Center
@@ -28,7 +28,7 @@ fun LibraryScreen(onBack: () -> Unit) {
                 color = Color.Black
             )
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onBack) { Text("Go Back") }
+
         }
     }
 }

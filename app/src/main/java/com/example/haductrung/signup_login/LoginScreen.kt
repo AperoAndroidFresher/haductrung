@@ -27,7 +27,8 @@ fun LoginScreen(
     onLoginClick: () -> Unit,
     SetNews: () -> Unit,
     isPasswordVisible: Boolean,
-    onTogglePasswordVisibility: () -> Unit
+    onTogglePasswordVisibility: () -> Unit,
+
 ) {
     Column(
         modifier = Modifier.fillMaxSize().background(color = Color.Black),

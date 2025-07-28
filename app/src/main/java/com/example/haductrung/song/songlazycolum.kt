@@ -34,8 +34,8 @@ fun SongItem(
     isMenuExpanded: Boolean,
     onDismissMenu: () -> Unit,
     onDeleteClick: () -> Unit,
-    onMOPClick: () -> Unit,
-    isSort: Boolean
+    onMoreClick: () -> Unit,
+    isSortMode: Boolean
 
 ) {
     Row(
@@ -78,20 +78,20 @@ fun SongItem(
                 fontSize = 14.sp
             )
             Box {
-                val iconResId3 = if (isSort) R.drawable.hbg else R.drawable.bacham
-                val contenDes3 = if (isSort) "sortting" else "normal"
+                val iconResId3 = if (isSortMode) R.drawable.hbg else R.drawable.bacham
+                val contenDes3 = if (isSortMode) "sortting" else "normal"
                 Image(
                     painter = painterResource(iconResId3),
                     contentDescription = contenDes3,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {
-                            if (!isSort) {
-                                onMOPClick()
+                            if (!isSortMode) {
+                                onMoreClick()
                             }
                         }
                 )
-                if(!isSort) {
+                if(!isSortMode) {
                     DropdownMenu(
                         expanded = isMenuExpanded,
                         onDismissRequest = onDismissMenu,

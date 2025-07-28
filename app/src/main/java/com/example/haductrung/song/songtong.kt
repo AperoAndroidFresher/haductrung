@@ -69,7 +69,7 @@ fun SongScreen(
                 Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val iconResId = if (isGridView) R.drawable.bacham else R.drawable.grid
+                val iconResId = if (isGridView) R.drawable.list else R.drawable.grid
                 val content = if (isGridView) "List View" else "Grid View"
 
                 Image(
@@ -102,8 +102,8 @@ fun SongScreen(
                     val song1 = songList[index]
                     SongGridItem(
                         song = song1,
-                        onMOPClick = { onMoreClick(song1) },
-                        isMenuExpanded = (songWithMenu == song1.idanh),
+                        onMoreClick = { onMoreClick(song1) },
+                        isMenuExpanded = (songWithMenu == song1.id),
                         onDismissMenu = onDismissMenu,
                         onDeleteClick = {
                             onDeleteClick(song1)
@@ -118,13 +118,13 @@ fun SongScreen(
                     val song1 = songList[index]
                     SongItem(
                         song = song1,
-                        onMOPClick = { onMoreClick(song1) },
-                        isMenuExpanded = (songWithMenu == song1.idanh),
+                        onMoreClick = { onMoreClick(song1) },
+                        isMenuExpanded = (songWithMenu == song1.id),
                         onDismissMenu = onDismissMenu,
                         onDeleteClick = {
                             onDeleteClick(song1)
                         },
-                        isSort = isSortMode
+                        isSortMode = isSortMode
                     )
                 }
             }

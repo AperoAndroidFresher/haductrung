@@ -30,7 +30,8 @@ fun SignupScreen(
     isPasswordVisible: Boolean,
     onTogglePasswordVisibility: () -> Unit,
     isConfirmPasswordVisible: Boolean,
-    onToggleConfirmPasswordVisibility: () -> Unit
+    onToggleConfirmPasswordVisibility: () -> Unit,
+    onBack: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().background(color = Color.Black),
