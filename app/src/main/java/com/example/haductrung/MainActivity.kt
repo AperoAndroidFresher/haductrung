@@ -3,20 +3,40 @@ package com.example.haductrung
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.haductrung.profile.ProfileScreen
+//import com.example.haductrung.signup_login.AuthScreen
+import com.example.haductrung.signup_login.LoginScreen
+import com.example.haductrung.signup_login.SignupScreen
+import com.example.haductrung.signup_login.WelcomeScreen
+import com.example.haductrung.song.Song
+import com.example.haductrung.song.SongScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
+import kotlinx.coroutines.delay
+
+
+sealed interface Screen {
+    data object Welcome : Screen
+    data object Login : Screen
+    data object SignUp : Screen
+    data object Home : Screen
+    data object Profile : Screen
+    data object Library : Screen
+    data object Playlist : Screen
+
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,21 +47,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AuthScreen()
+                    AppNavigator()
                 }
             }
         }
     }
 }
 
-enum class Screen {
-    Welcome, Login, SignUp
-}
-
 @Composable
-fun AuthScreen() {
-    var currentScreen by remember { mutableStateOf(Screen.Welcome) }
-
+fun AppNavigator() {
+    val backStack = remember { mutableStateListOf<Screen>(Screen.Welcome) }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -55,150 +70,236 @@ fun AuthScreen() {
 
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isConfirmPasswordVisible by remember { mutableStateOf(false) }
-
-    when (currentScreen) {
-        Screen.Welcome -> WelcomeScreen(
-            onTimeout = { currentScreen = Screen.Login }
-        )
-
-        Screen.Login -> LoginScreen(
-            username = username,
-            onUsernameChange = { username = it },
-            password = password,
-            onPasswordChange = { password = it },
-            isChecked = rememberMe,
-            onCheckedChange = { rememberMe = it },
-            onLoginClick = { },
-            SetNews = {
-                username = ""
-                password = ""
-                confirmPassword = ""
-                email = ""
-                usernameError = null
-                passwordError = null
-                confirmPasswordError = null
-                emailError = null
-                currentScreen = Screen.SignUp
-                isPasswordVisible = false
-            },
-            isPasswordVisible = isPasswordVisible,
-            onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible }
-        )
-
-        Screen.SignUp -> SignupScreen(
-            username = username,
-            onUsernameChange = { username = it },
-            password = password,
-            onPasswordChange = { password = it },
-            confirmPassword = confirmPassword,
-            onConfirmPasswordChange = { confirmPassword = it },
-            email = email,
-            onEmailChange = { email = it },
-            usernameError = usernameError,
-            passwordError = passwordError,
-            confirmPasswordError = confirmPasswordError,
-            emailError = emailError,
-            onSignUpClick = {
-                usernameError = null
-                passwordError = null
-                confirmPasswordError = null
-                emailError = null
-                var isValid = true
-
-                if (username.isBlank() || !username.matches(Regex("^[a-zA-Z0-9]+$"))) {
-                    usernameError = "invalid format"
-                    isValid = false
-                    username = ""
-                }
-
-                if (password.isBlank() || !password.matches(Regex("^[a-zA-Z0-9]+$"))) {
-                    passwordError = "invalid format"
-                    isValid = false
-                    password = ""
-                }
-
-                if (confirmPassword != password) {
-                    confirmPasswordError = "invalid format"
-                    isValid = false
-                    confirmPassword = ""
-                }
-
-                if (email.isBlank() || !email.matches(Regex("^[a-zA-Z0-9._-]+@apero\\.vn$"))) {
-                    emailError = "invalid email"
-                    isValid = false
-                    email = ""
-                }
-
-                if (isValid) {
-                    currentScreen = Screen.Login
-                }
-            },
-
-            isPasswordVisible = isPasswordVisible,
-            onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
-            isConfirmPasswordVisible = isConfirmPasswordVisible,
-            onToggleConfirmPasswordVisibility = {
-                isConfirmPasswordVisible = !isConfirmPasswordVisible
-            }
+    var isGridView by remember { mutableStateOf(false) }
+    var songWithMenu  by remember { mutableStateOf<Int?>(null) }
+    var isSortMode by remember { mutableStateOf(false) }
+    val songList = remember {
+        mutableListOf(
+            Song(1,"Rainy days", "Moody,", "04:30", R.drawable.grainydays),
+            Song(2,"Cofffee", "Kainbeats", "04:30", R.drawable.cofee,),
+            Song(3,"Rainfdrops", "Rainyyxx", "00:30", R.drawable.raindrop),
+            Song(4,"Tokydo", "SmYang", "04:02", R.drawable.tokyo),
+            Song(5,"Lulflaby", "Iamfinenow", "04:02", R.drawable.lulabby),
+            Song(6,"Raindsy dayss", "Moody,", "04:30", R.drawable.grainydays),
+            Song(7,"Rainy days", "Moody,", "04:30", R.drawable.grainydays),
+            Song(8,"Cofffee", "Kainbeats", "04:30", R.drawable.cofee,),
+            Song(9,"Rainfdrops", "Rainyyxx", "00:30", R.drawable.raindrop),
+            Song(10,"Tokydo", "SmYang", "04:02", R.drawable.tokyo),
+            Song(11,"Lulflaby", "Iamfinenow", "04:02", R.drawable.lulabby),
         )
     }
-}
-    @Composable
-    fun Header(title: String) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(top = 30.dp)) {
-            Image(
-                painterResource(R.drawable.logochaomung),
-                contentDescription = "Header logo",
-                modifier = Modifier.size(300.dp)
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var phoneError by remember { mutableStateOf<String?>(null) }
+    var universisyError by remember { mutableStateOf<String?>(null) }
+    var name by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var university by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var isEditing by remember { mutableStateOf(false) }
+    var popup by remember { mutableStateOf(false) }
+    var universityError by remember { mutableStateOf<String?>(null) }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() }
+    ) { screen ->
+        when (screen) {
+            is Screen.Welcome -> WelcomeScreen(
+                onTimeout = {
+                    backStack.clear()
+                    backStack.add(Screen.Login)
+                }
             )
-            Text(
-                title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                modifier = Modifier.padding(top = 230.dp)
+
+            is Screen.Login -> LoginScreen(
+                username = username,
+                onUsernameChange = { username = it },
+
+                password = password,
+                onPasswordChange = { password = it },
+
+                isChecked = rememberMe,
+                onCheckedChange = { rememberMe = it },
+
+                onLoginClick = {
+                    if (username != "" && password != "") {
+                        backStack.add(Screen.Home)
+                    }
+                },//trick
+                SetNews = {
+                    username = ""
+                    password = ""
+                    confirmPassword = ""
+                    email = ""
+                    usernameError = null
+                    passwordError = null
+                    confirmPasswordError = null
+                    emailError = null
+                    isPasswordVisible = false
+                    backStack.add(Screen.SignUp)
+                },
+
+                isPasswordVisible = isPasswordVisible,
+                onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible }
+            )
+
+            is Screen.SignUp -> SignupScreen(
+                username = username,
+                onUsernameChange = { username = it },
+                password = password,
+                onPasswordChange = { password = it },
+                confirmPassword = confirmPassword,
+                onConfirmPasswordChange = { confirmPassword = it },
+                email = email,
+                usernameError = usernameError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmPasswordError,
+                emailError = emailError,
+                onEmailChange = { email = it },
+                onSignUpClick = {
+                    usernameError = null
+                    passwordError = null
+                    confirmPasswordError = null
+                    emailError = null
+                    var isValid = true
+                    if (username.isBlank() || !username.matches(Regex("^[a-zA-Z0-9]+$"))) {
+                        usernameError = "invalid format"
+                        isValid = false
+                        username = ""
+                    }
+
+                    if (password.isBlank() || !password.matches(Regex("^[a-zA-Z0-9]+$"))) {
+                        passwordError = "invalid format"
+                        isValid = false
+                        password = ""
+                    }
+
+                    if (confirmPassword != password) {
+                        confirmPasswordError = "invalid format"
+                        isValid = false
+                        confirmPassword = ""
+                    }
+
+                    if (email.isBlank() || !email.matches(Regex("^[a-zA-Z0-9._-]+@apero\\.vn$"))) {
+                        emailError = "invalid email"
+                        isValid = false
+                        email = ""
+                    }
+
+                    if (isValid) {
+                        backStack.add(Screen.Login)
+                    }
+                },
+                isPasswordVisible = isPasswordVisible,
+                onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                isConfirmPasswordVisible = isConfirmPasswordVisible,
+                onToggleConfirmPasswordVisibility = {
+                    isConfirmPasswordVisible = !isConfirmPasswordVisible
+                }
+            )
+
+            is Screen.Home -> Home(
+                onLibraryButtonClick = { backStack.add(Screen.Library) },
+                onMyPlaylistButtonClick = { backStack.add(Screen.Playlist) },
+                onHomeButtonClick = {backStack.add(Screen.Home)},
+                onProfileIconClick = {backStack.add(Screen.Profile)}
+            )
+
+            is Screen.Profile -> ProfileScreen(
+                name = name,
+                phone = phone,
+                university = university,
+                description = description,
+                isEditing = isEditing,
+                showPopup = popup,
+                nameError = nameError,
+                phoneError = phoneError,
+                universityError = universityError,
+                onNameChange = { name = it },
+                onPhoneChange = { phone = it },
+                onUniversityChange = { university = it },
+                onDescriptionChange = { description = it },
+                onEditClick = { isEditing = true },
+                onDismissPopup = { popup = false },
+                onSubmitClick = {
+                    nameError = null
+                    phoneError = null
+                    universisyError = null
+                    var isValid = true
+                    if (!name.matches(Regex("^[a-zA-Z\\s]*$"))) {
+                        isValid = false
+                        nameError= "invalid format"
+                    }
+                    if (!phone.matches(Regex("^0\\d{9}$"))) {
+                        isValid = false
+                        phoneError= "invalid format"
+                    }
+                    if (!university.matches(Regex("^[a-zA-Z\\s]*$"))) {
+                        isValid = false
+                        universisyError= "invalid format"
+                    }
+                    if (isValid) {
+                        isEditing = false
+                        popup = true
+                    }
+                },
+                onBack = { backStack.removeLastOrNull() }
+            )
+
+            is Screen.Library -> LibraryScreen(
+                onBack = { backStack.removeLastOrNull() }
+            )
+
+            is Screen.Playlist -> SongScreen(
+                songList = songList,
+                isGridView = isGridView,
+                isSortMode = isSortMode,
+                songWithMenu = songWithMenu,
+                onToggleViewClick = { isGridView = !isGridView },
+                onToggleSortClick = {
+                },
+                onMoreClick = { song1 -> songWithMenu = song1.idanh },
+                onDismissMenu = { songWithMenu = null },
+                onDeleteClick = { song1 ->
+                    songList.remove(song1)
+                    songWithMenu = null
+                },
+                onNavigateToProfile = { backStack.add(Screen.Profile) }
             )
         }
     }
-
+}
 
 @Composable
-fun TextSignup(
-    promptText: String,
-    actionText: String,
-    onActionClick: () -> Unit
+fun NavDisplay(
+    backStack: SnapshotStateList<Screen>,
+    onBack: () -> Unit,
+    entryProvider: @Composable (screen: Screen) -> Unit
 ) {
-    Row(
-        modifier = Modifier.padding(bottom = 40.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(promptText, fontSize = 18.sp, color = Color.White)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            actionText,
-            color = Color(0xFF06A0B5),
-            fontSize = 20.sp,
-            modifier = Modifier.clickable(onClick = onActionClick)
-        )
+    val currentScreen = backStack.lastOrNull()
+    if (currentScreen != null) {
+        Crossfade(targetState = currentScreen, label = "navigation") { screen ->
+            entryProvider(screen)
+        }
     }
 }
 
-@Preview(showBackground = true)
+
+
 @Composable
-fun PreviewAuth() {
-    HaductrungTheme {
-       // AuthScreen()
-        LoginScreen("fdf",
-            onUsernameChange = { },
-             "password",
-            onPasswordChange = { },
-            isChecked = true,
-            onCheckedChange = {  },
-            onLoginClick = { },
-            SetNews = {
-            },
-            isPasswordVisible = true,
-            onTogglePasswordVisibility = {  })
+fun PlaylistScreen(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Green),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "Playlist Screen",
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.Black
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onBack) { Text("Go Back") }
+        }
     }
 }
-
