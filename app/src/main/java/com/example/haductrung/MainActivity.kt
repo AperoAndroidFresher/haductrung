@@ -1,24 +1,17 @@
 package com.example.haductrung
 
 import android.app.Activity
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.example.haductrung.profile.ProfileScreen
-//import com.example.haductrung.signup_login.AuthScreen
 import com.example.haductrung.signup_login.LoginScreen
 import com.example.haductrung.signup_login.SignupScreen
 import com.example.haductrung.signup_login.WelcomeScreen
@@ -27,8 +20,9 @@ import com.example.haductrung.song.SongScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.delay
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 
 
 sealed interface Screen {
@@ -66,6 +60,12 @@ fun AppNavigator() {
     var confirmPassword by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val imagePickerLauncher= rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ){
+        uri: Uri? -> imageUri=uri
+    }
 
     var usernameError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
@@ -254,6 +254,7 @@ fun AppNavigator() {
                 phone = phone,
                 university = university,
                 description = description,
+                imageUri = imageUri,
                 isEditing = isEditing,
                 showPopup = popup,
                 nameError = nameError,
@@ -265,6 +266,9 @@ fun AppNavigator() {
                 onDescriptionChange = { description = it },
                 onEditClick = { isEditing = true },
                 onDismissPopup = { popup = false },
+                onAvatarClick = {
+                    imagePickerLauncher.launch("image/*")
+                },
                 onSubmitClick = {
                     nameError = null
                     phoneError = null
