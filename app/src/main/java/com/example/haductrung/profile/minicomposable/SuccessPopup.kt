@@ -1,4 +1,4 @@
-package com.example.haductrung.profile
+package com.example.haductrung.profile.minicomposable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package com.example.haductrung.song
+package com.example.haductrung.song.minicomposable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package com.example.haductrung.signup_login
+package com.example.haductrung.signup_login.minicomposale
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*

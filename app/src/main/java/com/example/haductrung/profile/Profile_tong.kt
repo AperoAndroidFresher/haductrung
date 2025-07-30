@@ -1,11 +1,7 @@
 package com.example.haductrung.profile
 
-import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,32 +20,42 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.example.haductrung.R
-import com.example.haductrung.ui.theme.HaductrungTheme
+import com.example.haductrung.profile.minicomposable.AppHeader
+import com.example.haductrung.profile.minicomposable.CircularProfileImage
+import com.example.haductrung.profile.minicomposable.LabeledInput
+import com.example.haductrung.profile.minicomposable.PrimaryButton
+import com.example.haductrung.profile.minicomposable.SuccessPopup
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun ProfileScreen(
-    name: String, onNameChange: (String) -> Unit,
-    phone: String, onPhoneChange: (String) -> Unit,
-    university: String, onUniversityChange: (String) -> Unit,
-    description: String, onDescriptionChange: (String) -> Unit,
-    isEditing: Boolean, onEditClick: () -> Unit,
-    onSubmitClick: () -> Unit,
-    showPopup: Boolean, onDismissPopup: () -> Unit,
-    nameError: String?,
-    phoneError: String?,
-    universityError: String?,
-    imageUri: Uri?,
-    onAvatarClick: () -> Unit,
-    onBack: () -> Unit
-
-
+    state: ProfileState,
+    onIntent: (ProfileIntent) -> Unit,
+    eventFlow: Flow<ProfileEvent>,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    var showPopup by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        eventFlow.collectLatest { event ->
+            when (event) {
+                is ProfileEvent.ShowSuccessPopup -> {
+                    showPopup = true
+                    delay(2000L)
+                    showPopup = false
+                }
+                else -> {}
+            }
+        }
+    }
+    BackHandler {
+        onIntent(ProfileIntent.OnBack)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -68,14 +74,13 @@ fun ProfileScreen(
             AppHeader(
                 title = "MY INFORMATION",
                 iconResId = R.drawable.icon,
-                onIconClick = onEditClick
-
+                onIconClick = { onIntent(ProfileIntent.onEditClick) }
             )
             Spacer(modifier = Modifier.height(10.dp))
 
             Box(contentAlignment = Alignment.Center) {
                 CircularProfileImage(
-                    model = imageUri ?: R.drawable.meo2,
+                    model = state.imageUri ?: R.drawable.meo2,
                     size = 120.dp,
                     modifier = Modifier.border(
                         width = 3.dp,
@@ -83,7 +88,7 @@ fun ProfileScreen(
                         shape = CircleShape
                     )
                 )
-                if (isEditing) {
+                if (state.isEditing) {
                     Image(
                         painter = painterResource(id = R.drawable.camera),
                         contentDescription = "Change Avatar",
@@ -94,9 +99,7 @@ fun ProfileScreen(
                             .size(60.dp)
                             .clip(CircleShape)
                             .alpha(0.6f)
-                            .clickable(onClick = onAvatarClick)
-
-
+                            .clickable { onIntent(ProfileIntent.onAvatarClick) }
                     )
                 }
             }
@@ -108,24 +111,24 @@ fun ProfileScreen(
             ) {
                 LabeledInput(
                     label = "NAME",
-                    value = name,
-                    onValueChange = onNameChange,
+                    value = state.name,
+                    onValueChange = {onIntent(ProfileIntent.onNameChange(it))},
                     placeholderText = "Enter your name...",
                     modifier = Modifier.weight(1f),
-                    enabled = isEditing,
-                    isError = nameError != null,
-                    errorMessage = nameError
+                    enabled = state.isEditing,
+                    isError = state.nameError != null,
+                    errorMessage = state.nameError
 
                 )
                 LabeledInput(
                     label = "PHONE NUMBER",
-                    value = phone,
-                    onValueChange = onPhoneChange,
+                    value = state.phone,
+                    onValueChange ={onIntent(ProfileIntent.onPhoneChange(it))} ,
                     placeholderText = "Your phone number...",
                     modifier = Modifier.weight(1f),
-                    enabled = isEditing,
-                    isError = phoneError != null,
-                    errorMessage = phoneError
+                    enabled = state.isEditing,
+                    isError = state.phoneError != null,
+                    errorMessage = state.phoneError
                 )
             }
 
@@ -133,12 +136,12 @@ fun ProfileScreen(
 
             LabeledInput(
                 label = "UNIVERSITY NAME",
-                value = university,
-                onValueChange = onUniversityChange,
+                value = state.university,
+                onValueChange = {onIntent(ProfileIntent.onUniversityChange(it))},
                 placeholderText = "Your University name...",
-                enabled = isEditing,
-                isError = universityError != null,
-                errorMessage = universityError
+                enabled = state.isEditing,
+                isError = state.universityError != null,
+                errorMessage = state.universityError
 
             )
 
@@ -146,64 +149,24 @@ fun ProfileScreen(
 
             LabeledInput(
                 label = "DESCRIBE YOURSELF",
-                value = description,
-                onValueChange = onDescriptionChange,
+                value = state.description,
+                onValueChange = {onIntent(ProfileIntent.onDescriptionChange(it))},
                 placeholderText = "Enter a description...",
                 height = 200.dp,
-                enabled = isEditing
+                enabled = state.isEditing
             )
             Spacer(modifier = Modifier.weight(1f))
-            if (isEditing) {
+            if (state.isEditing) {
                 PrimaryButton(
                     text = "SUBMIT",
-                    onClick = onSubmitClick,
+                    onClick = {onIntent(ProfileIntent.onSubmitClick)},
                     modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp)
                 )
             }
         }
-        AnimatedVisibility(
-            visible = showPopup,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut()
-        ) {
-            SuccessPopup(onDismissRequest = onDismissPopup)
+        AnimatedVisibility(visible = showPopup) {
+            SuccessPopup(onDismissRequest = { showPopup = false })
         }
-        if (showPopup) {
-            LaunchedEffect(Unit) {
-                delay(2000L)
-                onDismissPopup()
-            }
-        }
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun PreviewProfileScreen() {
-    HaductrungTheme {
-        ProfileScreen(
-
-            name = "Quan Bui",
-            phone = "0123456789",
-            university = "Apero University",
-            description = "This is a sample description.",
-            isEditing = true,
-            showPopup = false,
-            nameError = null,
-            phoneError = null,
-            universityError = null,
-            imageUri = null,
-
-
-            onNameChange = {},
-            onPhoneChange = {},
-            onUniversityChange = {},
-            onDescriptionChange = {},
-            onEditClick = {},
-            onSubmitClick = {},
-            onDismissPopup = {},
-            onAvatarClick = {},
-            onBack = {}
-        )
     }
 }
 

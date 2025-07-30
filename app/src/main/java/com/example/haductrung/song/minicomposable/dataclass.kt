@@ -1,4 +1,4 @@
-package com.example.haductrung.song
+package com.example.haductrung.song.minicomposable
 
 data class Song(
     val id :Int,

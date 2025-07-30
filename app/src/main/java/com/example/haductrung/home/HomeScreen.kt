@@ -1,10 +1,8 @@
-package com.example.haductrung
+package com.example.haductrung.home
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,15 +12,12 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-
+import com.example.haductrung.R
 @Composable
 fun Home(
-    modifier: Modifier = Modifier,
-    onProfileIconClick: ()->Unit = {},
-    onHomeButtonClick: ()->Unit = {},
-    onLibraryButtonClick: ()->Unit = {},
-    onMyPlaylistButtonClick: ()->Unit = {}
-
+    state: HomeState,
+    onIntent: (HomeIntent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold (
         topBar = {
@@ -30,20 +25,19 @@ fun Home(
                 modifier = modifier
                     .height(60.dp)
                     .fillMaxWidth(),
-                onProfileIconClick = onProfileIconClick
+                onProfileIconClick = { onIntent(HomeIntent.NavigateToProfile) }
             )
         },
         bottomBar = {
             BottomHomeBar(
                 modifier = modifier
                     .fillMaxWidth(),
-                onHomeButtonClick = onHomeButtonClick,
-                onLibraryButtonClick = onLibraryButtonClick,
-                onMyPlaylistButtonClick = onMyPlaylistButtonClick
+                onHomeButtonClick = { onIntent(HomeIntent.HomeTabClicked) },
+                onLibraryButtonClick = { onIntent(HomeIntent.LibraryTabClicked) },
+                onMyPlaylistButtonClick = { onIntent(HomeIntent.PlaylistTabClicked) }
             )
         }
-    ){
-            innerPadding ->
+    ){ innerPadding ->
         Column(
             modifier = modifier
                 .padding(innerPadding).fillMaxWidth(),
@@ -103,7 +97,7 @@ fun BottomHomeBar(
             border = BorderStroke(2.dp, Color.Black),
             onClick = onLibraryButtonClick
         ) {
-            Text("Playlist")
+            Text("Library")
         }
         Button(
             modifier = modifier
@@ -120,5 +114,5 @@ fun BottomHomeBar(
 @Preview
 @Composable
 fun Preview(){
-    Home()
+    Home( state = HomeState(),{},Modifier)
 }
