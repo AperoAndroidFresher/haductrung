@@ -8,6 +8,7 @@ data class SongState(
     val isGridView: Boolean =false,
     val isSortMode: Boolean= false,
     val songWithMenu: Int?=null,
+    val hasPermission: Boolean = false
 )
 
 sealed interface SongIntent {
@@ -16,6 +17,9 @@ sealed interface SongIntent {
     data class onMoreClick(val song: Song) :SongIntent
     data object onDismissMenu :SongIntent
     data class onDeleteClick(val song: Song) :SongIntent
+    data object CheckAndLoadSongs : SongIntent
+    data object onRequestPermissionAgain: SongIntent
 }
-sealed interface SongEven{
+sealed interface SongEvent{
+    data object RequestPermission : SongEvent
 }

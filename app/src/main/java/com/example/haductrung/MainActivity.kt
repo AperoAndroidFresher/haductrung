@@ -1,7 +1,10 @@
 package com.example.haductrung
 
+import android.Manifest
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import androidx.compose.runtime.getValue
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -32,6 +36,9 @@ import com.example.haductrung.signup_login.SignUpScreen.SignUpEvent
 import com.example.haductrung.signup_login.SignUpScreen.SignUpViewModel
 import com.example.haductrung.signup_login.SignUpScreen.SignupScreen
 import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
+import com.example.haductrung.song.SongEvent
+import com.example.haductrung.song.SongIntent
+import com.example.haductrung.song.SongRepository
 import com.example.haductrung.song.SongScreen
 import com.example.haductrung.song.SongViewModel
 import com.example.haductrung.ui.theme.HaductrungTheme
@@ -79,7 +86,6 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     val viewModel: ProfileViewModel = viewModel()
-    val viewModelsong: SongViewModel = viewModel()
     val viewModelSU: SignUpViewModel = viewModel()
     val viewModellg: LoginViewModel = viewModel()
 
@@ -109,6 +115,7 @@ fun AppNavigation() {
                                 popUpTo(Login) { inclusive = true }
                             }
                         }
+
                         is LoginEvent.NavigateToSignUp -> {
                             navController.navigate(SignUp)
                         }
@@ -164,23 +171,49 @@ fun AppNavigation() {
                 onIntent = viewModelh::processIntent
             )
         }
-
         composable<Playlist> {
-
-            val state by viewModelsong.state.collectAsStateWithLifecycle()
+            val context = LocalContext.current
+            val viewModelPL: SongViewModel = viewModel {
+                SongViewModel(SongRepository(context), context.applicationContext)
+            }
+            val state by viewModelPL.state.collectAsStateWithLifecycle()
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission())
+            {
+                isGranted: Boolean ->
+                if (isGranted) {
+                    viewModelPL.processIntent(SongIntent.CheckAndLoadSongs)
+                }
+            }
+            LaunchedEffect(Unit) {
+                viewModelPL.event.collect { event ->
+                    when (event) {
+                        is SongEvent.RequestPermission -> {
+                            val permission =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    Manifest.permission.READ_MEDIA_AUDIO
+                                } else {
+                                    Manifest.permission.READ_EXTERNAL_STORAGE
+                                }
+                            permissionLauncher.launch(permission)
+                        }
+                    }
+                }
+            }
+            LaunchedEffect(Unit) {
+                viewModelPL.processIntent(SongIntent.CheckAndLoadSongs)
+            }
             SongScreen(
                 state = state,
-                onIntent = viewModelsong::processIntent
+                onIntent = viewModelPL::processIntent
             )
         }
-
         composable<Library> {
             val viewModell: LibraryViewModel = viewModel()
             val state by viewModell.state.collectAsStateWithLifecycle()
             LibraryScreen(state = state)
 
         }
-
         composable<Profile> {
 
             val state by viewModel.state.collectAsStateWithLifecycle()

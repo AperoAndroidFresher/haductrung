@@ -20,10 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
 import com.example.haductrung.R
 
 
@@ -38,16 +42,24 @@ fun SongItem(
     isSortMode: Boolean
 
 ) {
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            add(VideoFrameDecoder.Factory())
+        }
+        .build()
     Row(
         modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painterResource(song.idanh),
-            song.title,
-            Modifier
+        AsyncImage(
+            model = song.albumArtUri,
+            imageLoader = imageLoader,
+            contentDescription = song.title,
+            placeholder = painterResource(id = R.drawable.grainydays),
+            error = painterResource(id = R.drawable.cofee),
+            modifier = Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(8.dp))
         )

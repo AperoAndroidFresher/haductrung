@@ -21,10 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
 import com.example.haductrung.R
 
 
@@ -38,14 +44,22 @@ fun SongGridItem(
 
 
     ) {
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            add(VideoFrameDecoder.Factory())
+        }
+        .build()
     Column(
         modifier = Modifier.padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
-            Image(
-                painter = painterResource(id = R.drawable.grainydays),
-                contentDescription = null,
+            AsyncImage(
+                model = song.albumArtUri,
+                imageLoader = imageLoader,
+                contentDescription = song.title,
+                placeholder = painterResource(id = R.drawable.grainydays),
+                error = painterResource(id = R.drawable.cofee),
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
@@ -80,13 +94,19 @@ fun SongGridItem(
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 30.sp,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
+
         )
         Text(
             text = song.artist,
             color = Color.Gray,
             fontSize = 20.sp,
+            maxLines = 1,
             fontWeight = FontWeight.Bold,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
         )
         Spacer(modifier = Modifier.height(7.dp))
         Text(
