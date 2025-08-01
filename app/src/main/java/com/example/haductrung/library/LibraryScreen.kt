@@ -1,8 +1,6 @@
-package com.example.haductrung.song
+package com.example.haductrung.library
 
 
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,19 +18,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.haductrung.R
-import com.example.haductrung.song.minicomposable.SongGridItem
-import com.example.haductrung.song.minicomposable.SongItem
+import com.example.haductrung.library.minicomposable.SongGridItem
+import com.example.haductrung.library.minicomposable.SongItem
 
 
 @Composable
-fun SongScreen(
-    state: SongState,
-    onIntent:(SongIntent)->Unit,
+fun LibraryScreen(
+    state: LibraryState,
+    onIntent:(LibraryIntent)->Unit,
 ) {
-    val activity = (LocalActivity.current)
-    BackHandler {
-        activity?.finish()
-    }
+//    val activity = (LocalActivity.current)
+//    BackHandler {
+//        activity?.finish()
+//    }
     if(state.hasPermission) {
         Column(
             Modifier
@@ -66,7 +64,7 @@ fun SongScreen(
                         modifier = Modifier
                             .size(35.dp)
                             .padding(end = 10.dp)
-                            .clickable { onIntent(SongIntent.onToggleViewClick) }
+                            .clickable { onIntent(LibraryIntent.onToggleViewClick) }
                     )
 
                     val iconResID2 = if (state.isSortMode) R.drawable.tickv else R.drawable.sort
@@ -76,7 +74,7 @@ fun SongScreen(
                         contentDescription = content2,
                         modifier = Modifier
                             .size(30.dp)
-                            .clickable { onIntent(SongIntent.onToggleSortClick) }
+                            .clickable { onIntent(LibraryIntent.onToggleSortClick) }
 
                     )
                 }
@@ -90,11 +88,11 @@ fun SongScreen(
                         val song1 = state.songList[index]
                         SongGridItem(
                             song = song1,
-                            onMoreClick = { onIntent(SongIntent.onMoreClick(song1)) },
+                            onMoreClick = { onIntent(LibraryIntent.onMoreClick(song1)) },
                             isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(SongIntent.onDismissMenu) },
-                            onDeleteClick = {
-                                onIntent(SongIntent.onDeleteClick(song1))
+                            onDismissMenu = { onIntent(LibraryIntent.onDismissMenu) },
+                            onAddplaylistClick = {
+                                onIntent(LibraryIntent.onAddplaylistClick(song1))
                             }
 
                         )
@@ -106,11 +104,11 @@ fun SongScreen(
                         val song1 = state.songList[index]
                         SongItem(
                             song = song1,
-                            onMoreClick = { onIntent(SongIntent.onMoreClick(song1)) },
+                            onMoreClick = { onIntent(LibraryIntent.onMoreClick(song1)) },
                             isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(SongIntent.onDismissMenu) },
-                            onDeleteClick = {
-                                onIntent(SongIntent.onDeleteClick(song1))
+                            onDismissMenu = { onIntent(LibraryIntent.onDismissMenu) },
+                            onAddplaylistClick = {
+                                onIntent(LibraryIntent.onAddplaylistClick(song1))
                             },
                             isSortMode = state.isSortMode
                         )
@@ -126,7 +124,7 @@ fun SongScreen(
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onIntent(SongIntent.onRequestPermissionAgain) }
+                    modifier = Modifier.clickable { onIntent(LibraryIntent.onRequestPermissionAgain) }
                 ) {
                     Text("Please grant access permission in settings", color = Color.White)
                 }

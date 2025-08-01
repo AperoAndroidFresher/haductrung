@@ -1,4 +1,4 @@
-package com.example.haductrung.song.minicomposable
+package com.example.haductrung.library.minicomposable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -14,27 +14,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.haductrung.R
 
 @Composable
-fun DeleteSong(onDeleteClick: () -> Unit) {
+fun Addplaylist(onAddplaylistClick: () -> Unit) {
     Column {
         Row(
             modifier = Modifier
-                .clickable(onClick = onDeleteClick)
+                .clickable(onClick = onAddplaylistClick)
                 .padding(horizontal = 12.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(R.drawable.remove),
-                contentDescription = "xoa",
+                painter = painterResource(R.drawable.addplaylist),
+                contentDescription = "add",
                 modifier = Modifier.size(30.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Remove from playlist",
+                text = "Add to playlist",
                 color = Color.White,
                 fontSize = 15.sp
             )
@@ -51,10 +52,15 @@ fun DeleteSong(onDeleteClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Share (coming soon)",
-                color = Color.Gray,
+                text = "Share ",
+                color = Color.White,
                 fontSize = 15.sp
             )
         }
     }
+}
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+fun PreviewDeleteSong() {
+    Addplaylist(onAddplaylistClick = {})
 }

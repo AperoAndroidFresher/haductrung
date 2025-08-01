@@ -1,4 +1,4 @@
-package com.example.haductrung.song.minicomposable
+package com.example.haductrung.library.minicomposable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,7 +37,7 @@ fun SongItem(
     modifier: Modifier = Modifier,
     isMenuExpanded: Boolean,
     onDismissMenu: () -> Unit,
-    onDeleteClick: () -> Unit,
+    onAddplaylistClick: () -> Unit,
     onMoreClick: () -> Unit,
     isSortMode: Boolean
 
@@ -111,7 +111,7 @@ fun SongItem(
                             .background(color = Color.Black)
                             .clip(RoundedCornerShape(16.dp)),
                     ) {
-                        DeleteSong(onDeleteClick = onDeleteClick)
+                        Addplaylist(onAddplaylistClick = onAddplaylistClick)
                     }
                 }
             }
