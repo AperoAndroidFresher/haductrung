@@ -23,8 +23,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.haductrung.home.Home
 import com.example.haductrung.home.HomeEvent
 import com.example.haductrung.home.HomeViewModel
-import com.example.haductrung.library.LibraryScreen
-import com.example.haductrung.library.LibraryViewModel
+import com.example.haductrung.library.LibraryEvent
+import com.example.haductrung.library.LibraryIntent
 import com.example.haductrung.profile.ProfileEvent
 import com.example.haductrung.profile.ProfileIntent
 import com.example.haductrung.profile.ProfileScreen
@@ -36,11 +36,15 @@ import com.example.haductrung.signup_login.SignUpScreen.SignUpEvent
 import com.example.haductrung.signup_login.SignUpScreen.SignUpViewModel
 import com.example.haductrung.signup_login.SignUpScreen.SignupScreen
 import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
-import com.example.haductrung.song.SongEvent
-import com.example.haductrung.song.SongIntent
-import com.example.haductrung.song.SongRepository
-import com.example.haductrung.song.SongScreen
-import com.example.haductrung.song.SongViewModel
+import com.example.haductrung.library.LibraryRepository
+import com.example.haductrung.library.LibraryScreen
+import com.example.haductrung.library.LibraryViewModel
+import com.example.haductrung.library.minicomposable.AddToPlaylistDialog
+import com.example.haductrung.library.minicomposable.Song
+import com.example.haductrung.myplayList.MyPlaylistEvent
+import com.example.haductrung.myplayList.MyPlaylistIntent
+import com.example.haductrung.myplayList.MyPlaylistScreen
+import com.example.haductrung.myplayList.MyPlaylistViewModel
 import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
 
@@ -88,6 +92,7 @@ fun AppNavigation() {
     val viewModel: ProfileViewModel = viewModel()
     val viewModelSU: SignUpViewModel = viewModel()
     val viewModellg: LoginViewModel = viewModel()
+
 
     NavHost(
         navController = navController,
@@ -172,47 +177,65 @@ fun AppNavigation() {
             )
         }
         composable<Playlist> {
-            val context = LocalContext.current
-            val viewModelPL: SongViewModel = viewModel {
-                SongViewModel(SongRepository(context), context.applicationContext)
-            }
-            val state by viewModelPL.state.collectAsStateWithLifecycle()
-            val permissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission())
-            {
-                isGranted: Boolean ->
-                if (isGranted) {
-                    viewModelPL.processIntent(SongIntent.CheckAndLoadSongs)
-                }
-            }
+            // MyPlaylistViewModel sẽ quản lý danh sách các playlist người dùng tạo
+            val viewModel: MyPlaylistViewModel = viewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            // Xử lý sự kiện điều hướng khi người dùng nhấn vào một playlist cụ thể
             LaunchedEffect(Unit) {
-                viewModelPL.event.collect { event ->
+                viewModel.event.collect { event ->
                     when (event) {
-                        is SongEvent.RequestPermission -> {
-                            val permission =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    Manifest.permission.READ_MEDIA_AUDIO
-                                } else {
-                                    Manifest.permission.READ_EXTERNAL_STORAGE
-                                }
-                            permissionLauncher.launch(permission)
+                        is MyPlaylistEvent.NavigateToPlaylistDetail -> {
+                            // Điều hướng đến màn hình chi tiết của playlist đó
+                            // navController.navigate(...)
                         }
                     }
                 }
             }
-            LaunchedEffect(Unit) {
-                viewModelPL.processIntent(SongIntent.CheckAndLoadSongs)
-            }
-            SongScreen(
+
+            // Hiển thị màn hình quản lý playlist
+            MyPlaylistScreen(
                 state = state,
-                onIntent = viewModelPL::processIntent
+                onIntent = viewModel::processIntent
             )
         }
         composable<Library> {
-            val viewModell: LibraryViewModel = viewModel()
-            val state by viewModell.state.collectAsStateWithLifecycle()
-            LibraryScreen(state = state)
+            val context = LocalContext.current
+            val viewModel: LibraryViewModel = viewModel {
+                LibraryViewModel(LibraryRepository(context), context.applicationContext)
+            }
+            val state by viewModel.state.collectAsStateWithLifecycle()
 
+
+            var hasPermission by remember { mutableStateOf() }
+            val permissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted: Boolean ->
+                hasPermission = isGranted
+                if (isGranted) {
+                    viewModel.processIntent(LibraryIntent.CheckAndLoadSongs)
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.event.collect { event ->
+                    when (event) {
+                        is LibraryEvent.RequestPermission -> {
+                        }
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                viewModel.processIntent(LibraryIntent.CheckAndLoadSongs)
+            }
+            if (hasPermission) {
+                LibraryScreen(
+                    state = state,
+                    onIntent = viewModel::processIntent
+                )
+            } else {
+            }
         }
         composable<Profile> {
 

@@ -33,8 +33,8 @@ fun Home(
                 modifier = modifier
                     .fillMaxWidth(),
                 onHomeButtonClick = { onIntent(HomeIntent.HomeTabClicked) },
-                onLibraryButtonClick = { onIntent(HomeIntent.LibraryTabClicked) },
-                onMyPlaylistButtonClick = { onIntent(HomeIntent.PlaylistTabClicked) }
+                onMyPlaylistButtonClick = { onIntent(HomeIntent.LibraryTabClicked) },
+                onLibraryButtonClick = { onIntent(HomeIntent.PlaylistTabClicked) }
             )
         }
     ){ innerPadding ->
