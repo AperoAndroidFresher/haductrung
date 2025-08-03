@@ -1,4 +1,4 @@
-package com.example.haductrung.song.minicomposable
+package com.example.haductrung.library.minicomposable
 
 import android.net.Uri
 

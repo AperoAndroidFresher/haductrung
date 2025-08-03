@@ -1,4 +1,4 @@
-package com.example.haductrung.song.minicomposable
+package com.example.haductrung.library.minicomposable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,9 +41,8 @@ fun SongGridItem(
     onMoreClick: () -> Unit,
     isMenuExpanded: Boolean,
     onDismissMenu: () -> Unit,
-    onDeleteClick: () -> Unit,
-
-
+    // Nhận vào nội dung menu
+    menuContent: @Composable ColumnScope.() -> Unit
     ) {
     val imageLoader = ImageLoader.Builder(LocalContext.current)
         .components {
@@ -79,11 +79,9 @@ fun SongGridItem(
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = onDismissMenu,
-                    modifier = Modifier
-                        .background(color = Color.Black)
-                        .clip(RoundedCornerShape(16.dp)),
+                    modifier = Modifier.background(color = Color.Black)
                 ) {
-                    DeleteSong(onDeleteClick = onDeleteClick)
+                    menuContent()
                 }
 
             }

@@ -1,4 +1,4 @@
-package com.example.haductrung.song
+package com.example.haductrung.library
 
 import android.annotation.SuppressLint
 import android.content.ContentUris
@@ -6,11 +6,11 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.MediaStore
-import com.example.haductrung.song.minicomposable.Song
+import com.example.haductrung.library.minicomposable.Song
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-class SongRepository(private val context: Context) {
+class LibraryRepository(private val context: Context) {
 
     @SuppressLint("DefaultLocale")
     fun getAudioData(): List<Song> {
@@ -84,5 +84,11 @@ class SongRepository(private val context: Context) {
             }
         }
         return songList
+    }
+    suspend fun getSongsByIds(ids: List<Int>): List<Song> {
+        // Lấy tất cả bài hát
+        val allSongs = getAudioData()
+        // Lọc ra những bài hát có id nằm trong danh sách ids được truyền vào
+        return allSongs.filter { song -> ids.contains(song.id) }
     }
 }
