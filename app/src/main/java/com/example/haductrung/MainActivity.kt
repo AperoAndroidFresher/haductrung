@@ -203,10 +203,26 @@ fun AppNavigation() {
         }
         composable<Library> {
             val context = LocalContext.current
+
+            // === THIẾT LẬP KẾT NỐI DATABASE VÀ CÁC REPOSITORY ===
+            val database = AppDatabase.getDatabase(context)
+            val songDao = database.songDao()
+            val songRepository = SongRepository(songDao)
+            // Repository để quét nhạc từ bộ nhớ máy, giờ có tên là mediaStoreScanner cho rõ nghĩa
+            val mediaStoreScanner = LibraryRepository(context)
+            // ===============================================
+
+            // Khởi tạo LibraryViewModel với đầy đủ các dependency cần thiết
             val viewModelPL: LibraryViewModel = viewModel {
-                LibraryViewModel(LibraryRepository(context), context.applicationContext)
+                LibraryViewModel(
+                    songRepository = songRepository,
+                    mediaStoreScanner = mediaStoreScanner,
+                    applicationContext = context.applicationContext
+                )
             }
             val state by viewModelPL.state.collectAsStateWithLifecycle()
+
+            // Phần LaunchedEffect và gọi LibraryScreen giữ nguyên y hệt
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
@@ -214,6 +230,7 @@ fun AppNavigation() {
                     viewModelPL.processIntent(LibraryIntent.CheckAndLoadSongs)
                 }
             }
+
             LaunchedEffect(Unit) {
                 viewModelPL.event.collect { event ->
                     when (event) {
@@ -226,16 +243,17 @@ fun AppNavigation() {
                                 }
                             permissionLauncher.launch(permission)
                         }
-
                         is LibraryEvent.NavigateToAddToPlaylistScreen -> {
                             navController.navigate(AddToPlaylist(songId = event.song.id))
                         }
                     }
                 }
             }
+
             LaunchedEffect(Unit) {
                 viewModelPL.processIntent(LibraryIntent.CheckAndLoadSongs)
             }
+
             LibraryScreen(
                 state = state,
                 onIntent = viewModelPL::processIntent
@@ -244,37 +262,32 @@ fun AppNavigation() {
         dialog<AddToPlaylist> { backStackEntry ->
             val context = LocalContext.current
 
+            // Thiết lập kết nối database và repository
             val database = AppDatabase.getDatabase(context)
             val playlistDao = database.playlistDao()
             val playlistRepository = PlaylistRepository(playlistDao)
 
-            val viewModelAdd: AddToPlaylistViewModel = viewModel {
+            // Khởi tạo ViewModel và "tiêm" dependency vào
+            val viewModel: AddToPlaylistViewModel = viewModel {
                 AddToPlaylistViewModel(
-                    savedStateHandle = backStackEntry.savedStateHandle,
-                    playlistRepository = playlistRepository // Lấy repository
+                    playlistRepository = playlistRepository,
+                    savedStateHandle = backStackEntry.savedStateHandle
                 )
             }
-            val state by viewModelAdd.state.collectAsStateWithLifecycle()
+            val state by viewModel.state.collectAsStateWithLifecycle()
 
+            // LaunchedEffect và gọi Screen giữ nguyên
             LaunchedEffect(Unit) {
-                viewModelAdd.event.collect { event ->
+                viewModel.event.collect { event ->
                     when (event) {
-                        is AddToPlaylistEvent.GoBack -> {
-                            navController.popBackStack()
-                        }
-
+                        is AddToPlaylistEvent.GoBack -> navController.popBackStack()
                         is AddToPlaylistEvent.NavigateToMyPlaylist -> {
                             navController.navigate(Playlist) {
                                 popUpTo<AddToPlaylist> { inclusive = true }
                             }
                         }
-
                         is AddToPlaylistEvent.ShowSuccessMessage -> {
-                            Toast.makeText(
-                                context,
-                                "Added to ${event.playlistName}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Added to ${event.playlistName}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -282,7 +295,7 @@ fun AppNavigation() {
 
             AddToPlaylistScreen(
                 state = state,
-                onIntent = viewModelAdd::processIntent,
+                onIntent = viewModel::processIntent,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -316,17 +329,20 @@ fun AppNavigation() {
         }
         composable<PlaylistDetail> { backStackEntry ->
             val context = LocalContext.current
-//connect db
+
+
             val database = AppDatabase.getDatabase(context)
+
             val playlistDao = database.playlistDao()
             val playlistRepository = PlaylistRepository(playlistDao)
 
-            val libraryRepository = LibraryRepository(context)
+            val songDao = database.songDao()
+            val songRepository = SongRepository(songDao)
             val viewModelDetail: PlaylistDetailViewModel = viewModel {
                 PlaylistDetailViewModel(
                     savedStateHandle = backStackEntry.savedStateHandle,
                     playlistRepository = playlistRepository,
-                    libraryRepository = libraryRepository
+                    songRepository = songRepository
                 )
             }
             val state by viewModelDetail.state.collectAsStateWithLifecycle()

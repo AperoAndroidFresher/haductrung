@@ -8,5 +8,8 @@ class SongRepository(private val songDao: SongDao) {
     suspend fun insertAll(songs: List<SongEntity>) {
         songDao.insertAll(songs)
     }
+    fun getSongsByIds(songIds: List<Int>): Flow<List<SongEntity>> {
+        return songDao.getSongsByIds(songIds)
+    }
 
 }

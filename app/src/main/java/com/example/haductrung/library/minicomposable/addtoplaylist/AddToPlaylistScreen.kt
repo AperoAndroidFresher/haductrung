@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.haductrung.R
-import com.example.haductrung.my_playlist.Playlist
-
+import com.example.haductrung.database.Converters
+import com.example.haductrung.database.entity.PlaylistEntity
 
 @Composable
 fun AddToPlaylistScreen(
@@ -32,7 +32,6 @@ fun AddToPlaylistScreen(
     onIntent: (AddToPlaylistIntent) -> Unit,
     onBack: () -> Unit
 ) {
-
     Dialog(onDismissRequest = onBack) {
         Card(
             modifier = Modifier
@@ -78,7 +77,6 @@ fun AddToPlaylistScreen(
         }
     }
 }
-
 @Composable
 private fun EmptyView(onIntent: (AddToPlaylistIntent) -> Unit) {
     Column(
@@ -118,14 +116,14 @@ private fun EmptyView(onIntent: (AddToPlaylistIntent) -> Unit) {
 
 @Composable
 private fun PlaylistListView(
-    playlists: List<Playlist>,
+    playlists: List<PlaylistEntity>,
     onIntent: (AddToPlaylistIntent) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(playlists, key = { it.id }) { playlist ->
+        items(playlists, key = { it.playlistId }) { playlist -> // SỬA Ở ĐÂY
             PlaylistSelectionItem(
                 playlist = playlist,
                 onClick = { onIntent(AddToPlaylistIntent.OnPlaylistSelected(playlist)) }
@@ -133,10 +131,9 @@ private fun PlaylistListView(
         }
     }
 }
-
 @Composable
 private fun PlaylistSelectionItem(
-    playlist: Playlist,
+    playlist: PlaylistEntity, // SỬA Ở ĐÂY
     onClick: () -> Unit
 ) {
     Row(
@@ -161,29 +158,15 @@ private fun PlaylistSelectionItem(
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp
             )
+            // SỬA Ở ĐÂY: Dùng Converter để đếm số bài hát
+            val songCount = Converters().fromString(playlist.songIdsJson).size
             Text(
-                text = "${playlist.songIds.size} songs",
+                text = "$songCount songs",
                 color = Color.Gray,
                 fontSize = 14.sp
             )
         }
     }
-}
-
-@Preview(name = "Loaded State")
-@Composable
-private fun AddToPlaylistScreenLoadedPreview() {
-    AddToPlaylistScreen(
-        state = AddToPlaylistState(
-            isLoading = false,
-            playlists = listOf(
-                Playlist(name = "Chill Mix", songIds = List(5) { it }),
-                Playlist(name = "Workout Jams", songIds = List(23) { it })
-            )
-        ),
-        onIntent = {},
-        onBack = {}
-    )
 }
 
 @Preview(name = "Empty State")

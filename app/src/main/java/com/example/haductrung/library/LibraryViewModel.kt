@@ -17,25 +17,42 @@ import android.Manifest
 import android.annotation.SuppressLint
 import com.example.haductrung.SongRepository
 import com.example.haductrung.database.entity.SongEntity
-import com.example.haductrung.library.minicomposable.Song
+import com.example.haductrung.library.Song
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
 
 
 class LibraryViewModel(
     private val songRepository: SongRepository,
-    private val libraryRepository: LibraryRepository,
+    private val mediaStoreScanner: LibraryRepository,
     private val applicationContext: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LibraryState())
     val state = _state.asStateFlow()
+
     private val _event = MutableSharedFlow<LibraryEvent>()
     val event = _event.asSharedFlow()
 
     init {
-       
-        loadSongFromDB()
+
+        observeSongsFromDatabase()
+    }
+
+    private fun observeSongsFromDatabase() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songsFromDb ->
+                _state.update { currentState ->
+                    val mappedSongs = mapEntitiesToSongs(songsFromDb)
+                    val finalList = if (currentState.isSortMode) {
+                        mappedSongs.sortedBy { it.title }
+                    } else {
+                        mappedSongs
+                    }
+                    currentState.copy(songList = finalList)
+                }
+            }
+        }
     }
 
     fun processIntent(intent: LibraryIntent) {
@@ -43,7 +60,6 @@ class LibraryViewModel(
             is LibraryIntent.onToggleViewClick -> {
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
-
             is LibraryIntent.onToggleSortClick -> {
                 val currentState = _state.value
                 val sortedList = if (!currentState.isSortMode) {
@@ -53,33 +69,25 @@ class LibraryViewModel(
                 }
                 _state.update { it.copy(isSortMode = !it.isSortMode, songList = sortedList) }
             }
-
             is LibraryIntent.onMoreClick -> {
                 _state.update { it.copy(songWithMenu = intent.song.id) }
             }
-
             is LibraryIntent.onDismissMenu -> {
                 _state.update { it.copy(songWithMenu = null) }
             }
-
-            is LibraryIntent.onDeleteClick -> {
-                _state.update { it.copy(songWithMenu = null) }
-            }
-
             is LibraryIntent.CheckAndLoadSongs -> {
                 checkPermissionAndLoad()
             }
-
             is LibraryIntent.onRequestPermissionAgain -> {
                 viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
             }
-
             is LibraryIntent.OnAddToPlaylistClick -> {
                 viewModelScope.launch {
                     _state.update { it.copy(songWithMenu = null) }
                     _event.emit(LibraryEvent.NavigateToAddToPlaylistScreen(intent.song))
                 }
             }
+            else -> {}
         }
     }
 
@@ -96,54 +104,49 @@ class LibraryViewModel(
         _state.update { it.copy(hasPermission = isGranted) }
 
         if (isGranted) {
-            loadFormDeviceinDB()
+            syncSongsFromDeviceToDb()
         } else {
             viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
         }
     }
-
-    @SuppressLint("DefaultLocale")
-    private fun loadSongFromDB() {
-        viewModelScope.launch {
-            songRepository.getAllSongs().collect { songs: List<SongEntity> ->
-
-                val songList = songs.map { songEntity ->
-                    Song(
-                        id = songEntity.songId,
-                        title = songEntity.title,
-                        artist = songEntity.artist,
-                        duration =
-                            String.format("%02d:%02d",
-                                TimeUnit.MILLISECONDS.toMinutes(songEntity.durationMs),
-                                TimeUnit.MILLISECONDS.toSeconds(songEntity.durationMs) -
-                                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(songEntity.durationMs))),
-                        durationMs = songEntity.durationMs,
-                        filePath = songEntity.filePath,
-                        albumArtUri = songEntity.albumArtUri?.toUri()
-                    )
-                }
-                _state.update { it.copy(songList = songList) }
-            }
-        }
-    }
-
-    
-    private fun loadFormDeviceinDB() {
+    private fun syncSongsFromDeviceToDb() {
         viewModelScope.launch(Dispatchers.IO) {
+            // Lấy danh sách bài hát từ bộ nhớ máy
+            val deviceSongs = mediaStoreScanner.getAudioData()
 
-            val deviceSongs: List<Song> = libraryRepository.getAudioData()
-
+            // Chuyển đổi sang dạng Entity của database
             val songEntities = deviceSongs.map { song ->
                 SongEntity(
+                    songId = song.id,
                     title = song.title,
                     artist = song.artist,
                     durationMs = song.durationMs,
                     filePath = song.filePath,
-                    albumArtUri = song.albumArtUri.toString()
+                    albumArtUri = song.albumArtUri?.toString()
                 )
             }
-            
+
             songRepository.insertAll(songEntities)
+
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
+        return entities.map { entity ->
+            Song(
+                id = entity.songId,
+                title = entity.title,
+                artist = entity.artist,
+                duration = String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(entity.durationMs),
+                    TimeUnit.MILLISECONDS.toSeconds(entity.durationMs) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(entity.durationMs))
+                ),
+                durationMs = entity.durationMs,
+                filePath = entity.filePath,
+                albumArtUri = entity.albumArtUri?.toUri()
+            )
         }
     }
 }

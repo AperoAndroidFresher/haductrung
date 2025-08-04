@@ -21,7 +21,19 @@ interface PlaylistDao {
     @Delete
     suspend fun delete(playlist: PlaylistEntity)
 
+    @Query("""
+        SELECT * 
+        FROM playlists 
+        WHERE playlistId = :id 
+        LIMIT 1
+    """)
+    suspend fun findPlaylistById(id: Int): PlaylistEntity?
     //lấy playlist by userid
-    @Query("SELECT * FROM playlists WHERE creator_user_id = :userId ORDER BY name ASC")
+    @Query("""
+        SELECT * 
+        FROM playlists 
+        WHERE creator_user_id = :userId 
+        ORDER BY name ASC
+    """)
     fun getPlaylistsForUser(userId: Int): Flow<List<PlaylistEntity>>
 }

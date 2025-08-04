@@ -1,26 +1,30 @@
 package com.example.haductrung.my_playlist.playlistdetail
 
 
+import android.annotation.SuppressLint
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.haductrung.library.LibraryRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.example.haductrung.SongRepository
+import com.example.haductrung.database.Converters
+import com.example.haductrung.database.entity.SongEntity
+import com.example.haductrung.library.Song
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class PlaylistDetailViewModel(
     private val savedStateHandle: SavedStateHandle,
     private val playlistRepository: PlaylistRepository,
-    private val libraryRepository: LibraryRepository
+    private val songRepository: SongRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PlaylistDetailState())
     val state = _state.asStateFlow()
 
     init {
-        // Lấy playlistId tải dữ liệu
         val playlistId: String? = savedStateHandle["playlistId"]
         if (playlistId != null) {
             processIntent(PlaylistDetailIntent.LoadPlaylistDetails(playlistId))
@@ -30,64 +34,87 @@ class PlaylistDetailViewModel(
     fun processIntent(intent: PlaylistDetailIntent) {
         when (intent) {
             is PlaylistDetailIntent.LoadPlaylistDetails -> {
-                _state.update { it.copy(isLoading = true) }
-                viewModelScope.launch {
-                    val foundPlaylist = playlistRepository.findPlaylistById(intent.playlistId)
-                    if (foundPlaylist != null) {
-                        val songList = libraryRepository.getSongsByIds(foundPlaylist.songIds)
-                        _state.update {
-                            it.copy(
-                                playlist = foundPlaylist,
-                                songs = songList,
-                                isLoading = false
-                            )
-                        }
-                    } else {
-                        _state.update { it.copy(isLoading = false) }
-                    }
-                }
+                loadPlaylistAndSongs(intent.playlistId)
             }
-
-
             is PlaylistDetailIntent.OnToggleViewClick -> {
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
-
             is PlaylistDetailIntent.OnMoreClick -> {
                 _state.update { it.copy(songWithMenu = intent.song.id) }
             }
-
-            // đóng menu
             is PlaylistDetailIntent.OnDismissMenu -> {
                 _state.update { it.copy(songWithMenu = null) }
             }
-
-            // xóa bài hát khỏi playlist
             is PlaylistDetailIntent.OnDeleteSongFromPlaylist -> {
-                viewModelScope.launch {
-                    val currentPlaylist = state.value.playlist
-                    val songToRemove = intent.song
-
-                    if (currentPlaylist != null) {
-                        val newSongIds = currentPlaylist.songIds.filterNot { it == songToRemove.id }
-
-                        val updatedPlaylist = currentPlaylist.copy(songIds = newSongIds)
-
-                        playlistRepository.updatePlaylist(updatedPlaylist)
-
-                        _state.update {
-                            it.copy(
-                                songs = libraryRepository.getSongsByIds(newSongIds),
-                                songWithMenu = null
-                            )
-                        }
-                    }
+                viewModelScope.launch(Dispatchers.IO) {
+                    removeSongFromPlaylist(intent.song)
                 }
             }
+            else -> {}
+        }
+    }
 
-            is PlaylistDetailIntent.OnToggleSortClick -> {
+    private fun loadPlaylistAndSongs(playlistId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            val playlistIdInt = playlistId.toIntOrNull() ?: 0
 
+            // Lấy thông tin playlist
+            val playlistEntity = playlistRepository.findPlaylistById(playlistIdInt)
+            if (playlistEntity != null) {
+                _state.update { it.copy(playlist = playlistEntity) }
+
+                // Dùng converter để lấy danh sách ID
+                val songIds = Converters().fromString(playlistEntity.songIdsJson)
+
+                // Lắng nghe danh sách các bài hát tương ứng từ database
+                songRepository.getSongsByIds(songIds).collect { songEntities ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            songs = mapEntitiesToSongs(songEntities)
+                        )
+                    }
+                }
+            } else {
+                _state.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    private suspend fun removeSongFromPlaylist(songToRemove: Song) {
+        val currentPlaylist = state.value.playlist
+        if (currentPlaylist != null) {
+            val converters = Converters()
+            val currentSongIds = converters.fromString(currentPlaylist.songIdsJson).toMutableList()
+            currentSongIds.remove(songToRemove.id)
+            val updatedSongIdsJson = converters.fromIntList(currentSongIds)
+
+            val updatedPlaylist = currentPlaylist.copy(songIdsJson = updatedSongIdsJson)
+            playlistRepository.updatePlaylist(updatedPlaylist)
+
+            _state.update { it.copy(songWithMenu = null) }
+        }
+    }
+
+    // Hàm tiện ích để chuyển đổi từ Entity sang model của UI
+    @SuppressLint("DefaultLocale")
+    private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
+        return entities.map { entity ->
+            Song(
+                id = entity.songId,
+                title = entity.title,
+                artist = entity.artist,
+                duration = String.format(
+                    "%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(entity.durationMs),
+                    TimeUnit.MILLISECONDS.toSeconds(entity.durationMs) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(entity.durationMs))
+                ),
+                durationMs = entity.durationMs,
+                filePath = entity.filePath,
+                albumArtUri = entity.albumArtUri?.toUri()
+            )
         }
     }
 }
