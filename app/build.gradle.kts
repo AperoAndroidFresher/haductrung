@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -55,6 +56,15 @@ dependencies {
     implementation(libs.coil.gif)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.coil.video)
+    implementation(libs.spring.security.crypto)
+
+
+    implementation(libs.androidx.room.runtime)
+    //noinspection KaptUsageInsteadOfKsp
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,6 +73,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
-
-
 }

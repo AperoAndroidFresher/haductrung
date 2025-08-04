@@ -1,0 +1,12 @@
+package com.example.haductrung
+import com.example.haductrung.database.DAO.SongDao
+import com.example.haductrung.database.entity.SongEntity
+import kotlinx.coroutines.flow.Flow
+class SongRepository(private val songDao: SongDao) {
+
+    fun getAllSongs(): Flow<List<SongEntity>> = songDao.getAllSongs()
+    suspend fun insertAll(songs: List<SongEntity>) {
+        songDao.insertAll(songs)
+    }
+
+}

@@ -1,6 +1,6 @@
 package com.example.haductrung.library.minicomposable.addtoplaylist
 
-import com.example.haductrung.myplaylist.Playlist
+import com.example.haductrung.my_playlist.Playlist
 
 
 data class AddToPlaylistState(

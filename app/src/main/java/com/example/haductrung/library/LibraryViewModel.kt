@@ -9,15 +9,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import android.Manifest
+import android.annotation.SuppressLint
+import com.example.haductrung.SongRepository
+import com.example.haductrung.database.entity.SongEntity
+import com.example.haductrung.library.minicomposable.Song
+import java.util.concurrent.TimeUnit
+import androidx.core.net.toUri
 
 
 class LibraryViewModel(
-    private val repository: LibraryRepository,
+    private val songRepository: SongRepository,
+    private val libraryRepository: LibraryRepository,
     private val applicationContext: Context
 ) : ViewModel() {
 
@@ -25,6 +32,11 @@ class LibraryViewModel(
     val state = _state.asStateFlow()
     private val _event = MutableSharedFlow<LibraryEvent>()
     val event = _event.asSharedFlow()
+
+    init {
+       
+        loadSongFromDB()
+    }
 
     fun processIntent(intent: LibraryIntent) {
         when (intent) {
@@ -51,10 +63,7 @@ class LibraryViewModel(
             }
 
             is LibraryIntent.onDeleteClick -> {
-                val newList = _state.value.songList.toMutableList().apply {
-                    removeIf { it.id == intent.song.id }
-                }
-                _state.update { it.copy(songList = newList, songWithMenu = null) }
+                _state.update { it.copy(songWithMenu = null) }
             }
 
             is LibraryIntent.CheckAndLoadSongs -> {
@@ -73,6 +82,7 @@ class LibraryViewModel(
             }
         }
     }
+
     private fun checkPermissionAndLoad() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
@@ -86,20 +96,54 @@ class LibraryViewModel(
         _state.update { it.copy(hasPermission = isGranted) }
 
         if (isGranted) {
-            loadSongs()
+            loadFormDeviceinDB()
         } else {
-
             viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
         }
     }
-    fun loadSongs() {
-        if (state.value.songList.isNotEmpty()) return
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val songs = repository.getAudioData()
-            withContext(Dispatchers.Main) {
-                _state.update { it.copy(songList = songs) }
+    @SuppressLint("DefaultLocale")
+    private fun loadSongFromDB() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songs: List<SongEntity> ->
+
+                val songList = songs.map { songEntity ->
+                    Song(
+                        id = songEntity.songId,
+                        title = songEntity.title,
+                        artist = songEntity.artist,
+                        duration =
+                            String.format("%02d:%02d",
+                                TimeUnit.MILLISECONDS.toMinutes(songEntity.durationMs),
+                                TimeUnit.MILLISECONDS.toSeconds(songEntity.durationMs) -
+                                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(songEntity.durationMs))),
+                        durationMs = songEntity.durationMs,
+                        filePath = songEntity.filePath,
+                        albumArtUri = songEntity.albumArtUri?.toUri()
+                    )
+                }
+                _state.update { it.copy(songList = songList) }
             }
+        }
+    }
+
+    
+    private fun loadFormDeviceinDB() {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val deviceSongs: List<Song> = libraryRepository.getAudioData()
+
+            val songEntities = deviceSongs.map { song ->
+                SongEntity(
+                    title = song.title,
+                    artist = song.artist,
+                    durationMs = song.durationMs,
+                    filePath = song.filePath,
+                    albumArtUri = song.albumArtUri.toString()
+                )
+            }
+            
+            songRepository.insertAll(songEntities)
         }
     }
 }

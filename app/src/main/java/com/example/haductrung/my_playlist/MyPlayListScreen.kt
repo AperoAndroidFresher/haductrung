@@ -1,4 +1,4 @@
-package com.example.haductrung.myplaylist
+package com.example.haductrung.my_playlist
 
 import com.example.haductrung.R
 import androidx.compose.foundation.Image

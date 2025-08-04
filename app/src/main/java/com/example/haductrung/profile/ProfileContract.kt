@@ -7,11 +7,12 @@ data class ProfileState(
     val phone: String = "",
     val university: String = "",
     val description: String = "",
-    val imageUri:Uri? = null,
+    val imageUri: Uri? = null,
     val isEditing: Boolean = false,
     val nameError: String? = null,
     val phoneError: String? = null,
-    val universityError: String? = null
+    val universityError: String? = null,
+    val isLoading: Boolean = true
 )
 
 //intent

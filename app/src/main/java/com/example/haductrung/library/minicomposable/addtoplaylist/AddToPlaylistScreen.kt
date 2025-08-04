@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.haductrung.R
-import com.example.haductrung.myplaylist.Playlist
+import com.example.haductrung.my_playlist.Playlist
 
 
 @Composable

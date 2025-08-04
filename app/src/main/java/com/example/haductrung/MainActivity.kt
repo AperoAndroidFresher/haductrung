@@ -34,12 +34,12 @@ import com.example.haductrung.library.LibraryViewModel
 import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistEvent
 import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistScreen
 import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistViewModel
-import com.example.haductrung.myplaylist.MyPlaylistScreen
-import com.example.haductrung.myplaylist.PlaylistEvent
-import com.example.haductrung.myplaylist.PlaylistViewModel
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistDetailScreen
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistDetailViewModel
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistRepository
+import com.example.haductrung.my_playlist.MyPlaylistScreen
+import com.example.haductrung.my_playlist.PlaylistEvent
+import com.example.haductrung.my_playlist.PlaylistViewModel
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailScreen
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailViewModel
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistRepository
 import com.example.haductrung.profile.ProfileEvent
 import com.example.haductrung.profile.ProfileIntent
 import com.example.haductrung.profile.ProfileScreen
@@ -53,6 +53,8 @@ import com.example.haductrung.signup_login.SignUpScreen.SignupScreen
 import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
+import com.example.haductrung.database.AppDatabase
+import com.example.haductrung.user.UserRepository
 
 @Serializable
 object Welcome
@@ -103,11 +105,6 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    val viewModel: ProfileViewModel = viewModel()
-    val viewModelSU: SignUpViewModel = viewModel()
-    val viewModellg: LoginViewModel = viewModel()
-
-
     NavHost(
         navController = navController,
         startDestination = Welcome
@@ -122,10 +119,18 @@ fun AppNavigation() {
             )
         }
 
-        composable<Login> {
+        composable<Login> {backStackEntry ->
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
 
+            val viewModellg: LoginViewModel = viewModel {
+                LoginViewModel(
+                    userRepository = userRepository,
+                    savedStateHandle = backStackEntry.savedStateHandle
+                )
+            }
             val state by viewModellg.state.collectAsStateWithLifecycle()
-
             LaunchedEffect(Unit) {
                 viewModellg.event.collect { event ->
                     when (event) {
@@ -147,7 +152,13 @@ fun AppNavigation() {
             )
         }
         composable<SignUp> {
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
 
+            val viewModelSU: SignUpViewModel = viewModel {
+                SignUpViewModel(userRepository = userRepository)
+            }
             val state by viewModelSU.state.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
                 viewModelSU.event.collect { event ->
@@ -232,10 +243,15 @@ fun AppNavigation() {
         }
         dialog<AddToPlaylist> { backStackEntry ->
             val context = LocalContext.current
+
+            val database = AppDatabase.getDatabase(context)
+            val playlistDao = database.playlistDao()
+            val playlistRepository = PlaylistRepository(playlistDao)
+
             val viewModelAdd: AddToPlaylistViewModel = viewModel {
                 AddToPlaylistViewModel(
                     savedStateHandle = backStackEntry.savedStateHandle,
-                    playlistRepository = PlaylistRepository // Lấy repository
+                    playlistRepository = playlistRepository // Lấy repository
                 )
             }
             val state by viewModelAdd.state.collectAsStateWithLifecycle()
@@ -272,7 +288,15 @@ fun AppNavigation() {
         }
 
         composable<Playlist> {
-            val viewModell: PlaylistViewModel = viewModel()
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            // lấy DAO
+            val playlistDao = database.playlistDao()
+            // tạo Repository từ DAO
+            val playlistRepository = PlaylistRepository(playlistDao)
+            val viewModell: PlaylistViewModel = viewModel {
+                PlaylistViewModel(playlistRepository = playlistRepository)
+            }
+
             val state by viewModell.state.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
@@ -290,15 +314,18 @@ fun AppNavigation() {
                 onIntent = viewModell::processIntent
             )
         }
-
         composable<PlaylistDetail> { backStackEntry ->
             val context = LocalContext.current
-            val libraryRepository = LibraryRepository(context)
+//connect db
+            val database = AppDatabase.getDatabase(context)
+            val playlistDao = database.playlistDao()
+            val playlistRepository = PlaylistRepository(playlistDao)
 
+            val libraryRepository = LibraryRepository(context)
             val viewModelDetail: PlaylistDetailViewModel = viewModel {
                 PlaylistDetailViewModel(
                     savedStateHandle = backStackEntry.savedStateHandle,
-                    playlistRepository = PlaylistRepository,
+                    playlistRepository = playlistRepository,
                     libraryRepository = libraryRepository
                 )
             }
@@ -310,7 +337,13 @@ fun AppNavigation() {
             )
         }
         composable<Profile> {
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
 
+            val viewModel: ProfileViewModel = viewModel {
+                ProfileViewModel(userRepository = userRepository)
+            }
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             val imagePickerLauncher = rememberLauncherForActivityResult(

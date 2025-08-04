@@ -1,7 +1,7 @@
-package com.example.haductrung.myplaylist.playlistdetail
+package com.example.haductrung.my_playlist.playlistdetail
 
 
-import com.example.haductrung.myplaylist.Playlist
+import com.example.haductrung.my_playlist.Playlist
 import com.example.haductrung.library.minicomposable.Song
 
 data class PlaylistDetailState(

@@ -3,7 +3,7 @@ package com.example.haductrung.library.minicomposable.addtoplaylist
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistRepository
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow

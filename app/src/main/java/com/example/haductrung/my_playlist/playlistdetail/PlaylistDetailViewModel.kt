@@ -1,4 +1,4 @@
-package com.example.haductrung.myplaylist.playlistdetail
+package com.example.haductrung.my_playlist.playlistdetail
 
 
 import androidx.lifecycle.SavedStateHandle

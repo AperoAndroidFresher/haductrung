@@ -1,4 +1,4 @@
-package com.example.haductrung.myplaylist.playlistdetail
+package com.example.haductrung.my_playlist.playlistdetail
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,7 +26,7 @@ import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.Song
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
-import com.example.haductrung.myplaylist.Playlist
+import com.example.haductrung.my_playlist.Playlist
 
 @Composable
 fun PlaylistDetailScreen(

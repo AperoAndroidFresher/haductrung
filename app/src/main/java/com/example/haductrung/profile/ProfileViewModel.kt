@@ -3,22 +3,48 @@ package com.example.haductrung.profile
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.haductrung.database.entity.UserEntity
+import com.example.haductrung.user.UserRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 
-class ProfileViewModel : ViewModel(){
-    //giuwxc state cho UI theo dõi
+class ProfileViewModel (private val userRepository: UserRepository): ViewModel(){
     private val _state = MutableStateFlow(ProfileState())
     val state = _state.asStateFlow()
-    // shareflow gửi các even 1 lần
     private val _event = MutableSharedFlow<ProfileEvent>()
     val event = _event.asSharedFlow()
-    // nhận và xử lí intent
+
+    private var currentUser: UserEntity? = null
+    init {
+        val currentUserId = 1
+
+        loadUserProfile(currentUserId)
+    }
+    private fun loadUserProfile(userId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _state.update { it.copy(isLoading = true) }
+            currentUser = userRepository.findUserById(userId)
+            currentUser?.let { user ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        name = user.username,
+                        phone = user.phone ?: "",
+                        university = user.university ?: "",
+                        description = user.description ?: "",
+                        imageUri = user.imageUri?.toUri()
+                    )
+                }
+            }
+        }
+    }
     fun processIntent(intent: ProfileIntent){
         when(intent){
             is ProfileIntent.onNameChange->{
@@ -40,7 +66,9 @@ class ProfileViewModel : ViewModel(){
                 _state.update { it.copy(isEditing = true) }
             }
             is ProfileIntent.onSubmitClick->{
-                submitProfile()
+                viewModelScope.launch(Dispatchers.IO) {
+                    submitProfile()
+                }
             }
             is ProfileIntent.OnBack -> {
                 viewModelScope.launch { _event.emit(ProfileEvent.NavigateBack) }
@@ -53,32 +81,34 @@ class ProfileViewModel : ViewModel(){
         }
 
     }
-    private fun submitProfile() {
-
+    private suspend fun submitProfile() {
         val currentState = _state.value
+        var isValid = true
+
         _state.update { it.copy(nameError = null, phoneError = null, universityError = null) }
 
-        var isValid = true
-        var finalState = _state.value
-
         if (!currentState.name.matches(Regex("^[a-zA-Z\\s]*$"))) {
+            _state.update { it.copy(nameError = "Invalid format") }
             isValid = false
-            finalState = finalState.copy(nameError = "invalid format")
         }
         if (!currentState.phone.matches(Regex("^0\\d{9}$"))) {
+            _state.update { it.copy(phoneError = "Invalid format") }
             isValid = false
-            finalState = finalState.copy(phoneError = "invalid format")
         }
         if (!currentState.university.matches(Regex("^[a-zA-Z\\s]*$"))) {
+            _state.update { it.copy(universityError = "Invalid format") }
             isValid = false
-            finalState = finalState.copy(universityError = "invalid format")
         }
-
-        if (isValid) {
+        if (isValid && currentUser != null) {
+            val updatedUser = currentUser!!.copy(
+                phone = currentState.phone,
+                university = currentState.university,
+                description = currentState.description,
+                imageUri = currentState.imageUri?.toString()
+            )
+            userRepository.updateUser(updatedUser)
             _state.update { it.copy(isEditing = false) }
-            viewModelScope.launch { _event.emit(ProfileEvent.ShowSuccessPopup) }
-        } else {
-            _state.value = finalState
+            _event.emit(ProfileEvent.ShowSuccessPopup)
         }
     }
 
