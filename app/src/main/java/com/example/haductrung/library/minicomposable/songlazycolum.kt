@@ -21,16 +21,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.ImageLoader
 import coil.compose.AsyncImage
-import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
 import com.example.haductrung.R
-import com.example.haductrung.library.Song
+import com.example.haductrung.repository.Song
 
 
 @Composable
@@ -43,11 +43,6 @@ fun SongItem(
     menuContent: @Composable ColumnScope.() -> Unit
 
 ) {
-    val imageLoader = ImageLoader.Builder(LocalContext.current)
-        .components {
-            add(VideoFrameDecoder.Factory())
-        }
-        .build()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -55,14 +50,17 @@ fun SongItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = song.albumArtUri,
-            imageLoader = imageLoader,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(song.albumArtUri)
+                .crossfade(true)
+                .fallback(R.drawable.grainydays)
+                .error(R.drawable.cofee)
+                .build(),
             contentDescription = song.title,
-            placeholder = painterResource(id = R.drawable.grainydays),
-            error = painterResource(id = R.drawable.cofee),
             modifier = Modifier
                 .size(56.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
         )
 
         Spacer(Modifier.width(16.dp))
@@ -92,10 +90,10 @@ fun SongItem(
             )
             Box {
                 val iconResId3 = if (isSortMode) R.drawable.hbg else R.drawable.bacham
-                val contenDes3 = if (isSortMode) "sortting" else "normal"
+                val contentDes3 = if (isSortMode) "sort" else "normal"
                 Image(
                     painter = painterResource(iconResId3),
-                    contentDescription = contenDes3,
+                    contentDescription = contentDes3,
                     modifier = Modifier
                         .size(20.dp)
                         .clickable {

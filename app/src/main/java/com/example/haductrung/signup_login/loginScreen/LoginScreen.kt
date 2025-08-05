@@ -1,4 +1,4 @@
-package com.example.haductrung.signup_login.LoginScreen
+package com.example.haductrung.signup_login.loginScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,18 +37,18 @@ fun LoginScreen(
         FormatTextField(
             placeholderText = "Username",
             value = state.username,
-            onValueChange = { onIntent(LoginIntent.onUsernameChange(it)) }, 
+            onValueChange = { onIntent(LoginIntent.OnUsernameChange(it)) },
             iconResId = R.drawable.username
         )
         Spacer(Modifier.height(20.dp))
         FormatTextField(
             placeholderText = "Password",
             value = state.password,
-            onValueChange = { onIntent(LoginIntent.onPasswordChange(it)) }, 
+            onValueChange = { onIntent(LoginIntent.OnPasswordChange(it)) },
             iconResId = R.drawable.password,
             visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick = { onIntent(LoginIntent.onTogglePasswordVisibility) }) { 
+                IconButton(onClick = { onIntent(LoginIntent.OnTogglePasswordVisibility) }) {
                     Image(
                         painter = painterResource(if (state.isPasswordVisible) R.drawable.eyeopen else R.drawable.eyeclose),
                         contentDescription = "Toggle password visibility",
@@ -59,11 +59,11 @@ fun LoginScreen(
         )
         RememberMeCheckbox(
             isChecked = state.isChecked,
-            onCheckedChange = { onIntent(LoginIntent.onCheckedChange(it)) } 
+            onCheckedChange = { onIntent(LoginIntent.OnCheckedChange(it)) }
         )
         FormatButton(
             text = "Login",
-            onClick = { onIntent(LoginIntent.onLoginClick) } 
+            onClick = { onIntent(LoginIntent.OnLoginClick) }
         )
         Spacer(Modifier.weight(1f))
         TextSignup(

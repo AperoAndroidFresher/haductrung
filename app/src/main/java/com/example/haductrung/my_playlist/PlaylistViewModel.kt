@@ -3,7 +3,8 @@ package com.example.haductrung.my_playlist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.haductrung.database.entity.PlaylistEntity
-import com.example.haductrung.my_playlist.playlistdetail.PlaylistRepository
+import com.example.haductrung.repository.PlaylistRepository
+import com.example.haductrung.signup_login.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,12 +22,13 @@ class PlaylistViewModel(private val playlistRepository: PlaylistRepository) : Vi
     val event = _event.asSharedFlow()
 
     init {
+        val currentUserId = SessionManager.currentUserId.value
 
-        val currentUserId = 1
-
-        viewModelScope.launch {
-            playlistRepository.getPlayListForUser(currentUserId).collect { playlistsFromDb ->
-                _state.update { it.copy(playlists = playlistsFromDb) }
+        if (currentUserId != null) {
+            viewModelScope.launch {
+                playlistRepository.getPlayListForUser(currentUserId).collect { playlistsFromDb ->
+                    _state.update { it.copy(playlists = playlistsFromDb) }
+                }
             }
         }
     }
@@ -74,13 +76,17 @@ class PlaylistViewModel(private val playlistRepository: PlaylistRepository) : Vi
 
             is PlaylistIntent.OnConfirmCreatePlaylist -> {
                 if (intent.name.isNotBlank()) {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val newPlaylist = PlaylistEntity(
-                            name = intent.name,
-                            creatorUserId = 1,
-                            songIdsJson = ""
-                        )
-                        playlistRepository.createPlaylist(newPlaylist)
+
+                    val currentUserId = SessionManager.currentUserId.value
+                    if (currentUserId != null) {
+                        viewModelScope.launch(Dispatchers.IO) {
+                            val newPlaylist = PlaylistEntity(
+                                name = intent.name,
+                                creatorUserId = currentUserId,
+                                songIdsJson = ""
+                            )
+                            playlistRepository.createPlaylist(newPlaylist)
+                        }
                     }
                     _state.update { it.copy(showCreatePlaylistDialog = false) }
                 }

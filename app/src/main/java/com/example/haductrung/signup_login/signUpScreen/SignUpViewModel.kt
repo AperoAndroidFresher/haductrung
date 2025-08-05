@@ -1,9 +1,9 @@
-package com.example.haductrung.signup_login.SignUpScreen
+package com.example.haductrung.signup_login.signUpScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.haductrung.database.entity.UserEntity
-import com.example.haductrung.user.UserRepository
+import com.example.haductrung.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,36 +23,36 @@ class SignUpViewModel(private val userRepository: UserRepository) : ViewModel() 
 
     fun processIntent(intent: SignUpIntent) {
         when (intent) {
-            is SignUpIntent.onUsernameChange -> {
+            is SignUpIntent.OnUsernameChange -> {
                 _state.update { it.copy(username = intent.newUsername, usernameError = null) }
             }
 
-            is SignUpIntent.onPasswordChange -> {
+            is SignUpIntent.OnPasswordChange -> {
                 _state.update { it.copy(password = intent.newPassword, passwordError = null) }
             }
 
-            is SignUpIntent.onConfirmPasswordChange -> {
+            is SignUpIntent.OnConfirmPasswordChange -> {
                 _state.update {
                     it.copy(
-                        confirmPassword = intent.newConfirmPassword,
+                        confirmPassword = intent.newCOnfirmPassword,
                         confirmPasswordError = null
                     )
                 }
             }
 
-            is SignUpIntent.onEmailChange -> {
+            is SignUpIntent.OnEmailChange -> {
                 _state.update { it.copy(email = intent.newEmail, emailError = null) }
             }
 
-            is SignUpIntent.onTogglePasswordVisibility -> {
+            is SignUpIntent.OnTogglePasswordVisibility -> {
                 _state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
 
-            is SignUpIntent.onToggleConfirmPasswordVisibility -> {
+            is SignUpIntent.OnToggleConfirmPasswordVisibility -> {
                 _state.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
             }
 
-            is SignUpIntent.onSignUpClick -> {
+            is SignUpIntent.OnSignUpClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     validateAndSignUp()
                 }

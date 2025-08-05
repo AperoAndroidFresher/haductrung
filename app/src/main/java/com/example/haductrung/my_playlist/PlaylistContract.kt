@@ -1,14 +1,6 @@
 package com.example.haductrung.my_playlist
 
 import com.example.haductrung.database.entity.PlaylistEntity
-import java.util.UUID
-
-
-data class Playlist(
-    val id: String = UUID.randomUUID().toString(),
-    val name: String,
-    val songIds: List<Int> = emptyList()
-)
 
 data class PlaylistState(
     val playlists: List<PlaylistEntity> = emptyList(),

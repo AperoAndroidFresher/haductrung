@@ -15,11 +15,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import android.Manifest
 import android.annotation.SuppressLint
-import com.example.haductrung.SongRepository
+import com.example.haductrung.repository.SongRepository
 import com.example.haductrung.database.entity.SongEntity
-import com.example.haductrung.library.Song
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
+import com.example.haductrung.repository.LibraryRepository
+import com.example.haductrung.repository.Song
 
 
 class LibraryViewModel(
@@ -57,10 +58,10 @@ class LibraryViewModel(
 
     fun processIntent(intent: LibraryIntent) {
         when (intent) {
-            is LibraryIntent.onToggleViewClick -> {
+            is LibraryIntent.OnToggleViewClick -> {
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
-            is LibraryIntent.onToggleSortClick -> {
+            is LibraryIntent.OnToggleSortClick -> {
                 val currentState = _state.value
                 val sortedList = if (!currentState.isSortMode) {
                     currentState.songList.sortedBy { it.title }
@@ -69,16 +70,16 @@ class LibraryViewModel(
                 }
                 _state.update { it.copy(isSortMode = !it.isSortMode, songList = sortedList) }
             }
-            is LibraryIntent.onMoreClick -> {
+            is LibraryIntent.OnMoreClick -> {
                 _state.update { it.copy(songWithMenu = intent.song.id) }
             }
-            is LibraryIntent.onDismissMenu -> {
+            is LibraryIntent.OnDismissMenu -> {
                 _state.update { it.copy(songWithMenu = null) }
             }
             is LibraryIntent.CheckAndLoadSongs -> {
                 checkPermissionAndLoad()
             }
-            is LibraryIntent.onRequestPermissionAgain -> {
+            is LibraryIntent.OnRequestPermissionAgain -> {
                 viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
             }
             is LibraryIntent.OnAddToPlaylistClick -> {
@@ -111,10 +112,10 @@ class LibraryViewModel(
     }
     private fun syncSongsFromDeviceToDb() {
         viewModelScope.launch(Dispatchers.IO) {
-            // Lấy danh sách bài hát từ bộ nhớ máy
+            // lấy bài hát từ bộ nhớ máy
             val deviceSongs = mediaStoreScanner.getAudioData()
 
-            // Chuyển đổi sang dạng Entity của database
+            // Chuyển đổi database
             val songEntities = deviceSongs.map { song ->
                 SongEntity(
                     songId = song.id,

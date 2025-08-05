@@ -1,10 +1,10 @@
 package com.example.haductrung.profile
 
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.haductrung.database.entity.UserEntity
-import com.example.haductrung.user.UserRepository
+import com.example.haductrung.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,20 +13,39 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import androidx.core.net.toUri
+import androidx.lifecycle.AndroidViewModel
+import com.example.haductrung.signup_login.SessionManager
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 
-class ProfileViewModel (private val userRepository: UserRepository): ViewModel(){
+class ProfileViewModel(
+    private val userRepository: UserRepository,
+    application: Application
+) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(ProfileState())
     val state = _state.asStateFlow()
     private val _event = MutableSharedFlow<ProfileEvent>()
     val event = _event.asSharedFlow()
 
     private var currentUser: UserEntity? = null
-    init {
-        val currentUserId = 1
 
-        loadUserProfile(currentUserId)
+    init {
+        SessionManager.currentUserId
+            .onEach { userId ->
+                if (userId != null) {
+                    loadUserProfile(userId)
+                } else {
+                    _state.value = ProfileState()
+                    currentUser = null
+                }
+            }
+            .launchIn(viewModelScope)
     }
+
     private fun loadUserProfile(userId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             _state.update { it.copy(isLoading = true) }
@@ -45,42 +64,71 @@ class ProfileViewModel (private val userRepository: UserRepository): ViewModel()
             }
         }
     }
-    fun processIntent(intent: ProfileIntent){
-        when(intent){
-            is ProfileIntent.onNameChange->{
+
+    fun processIntent(intent: ProfileIntent) {
+        when (intent) {
+            is ProfileIntent.OnNameChange -> {
                 _state.update { it.copy(name = intent.newName, nameError = null) }
             }
-            is ProfileIntent.onPhoneChange->{
-                _state.update { it.copy(phone=intent.newPhone, phoneError = null) }
+
+            is ProfileIntent.OnPhOneChange -> {
+                _state.update { it.copy(phone = intent.newPhOne, phoneError = null) }
             }
-            is ProfileIntent.onUniversityChange->{
+
+            is ProfileIntent.OnUniversityChange -> {
                 _state.update { it.copy(university = intent.newUniversity, universityError = null) }
             }
-            is ProfileIntent.onDescriptionChange->{
-                _state.update { it.copy(description = intent.newDescription) }
+
+            is ProfileIntent.OnDescriptiOnChange -> {
+                _state.update { it.copy(description = intent.newDescriptiOn) }
             }
-            is ProfileIntent.onAvatarClick->{
+
+            is ProfileIntent.OnAvatarClick -> {
                 viewModelScope.launch { _event.emit(ProfileEvent.OpenImagePicker) }
             }
-            is ProfileIntent.onEditClick->{
+
+            is ProfileIntent.OnEditClick -> {
                 _state.update { it.copy(isEditing = true) }
             }
-            is ProfileIntent.onSubmitClick->{
+
+            is ProfileIntent.OnSubmitClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     submitProfile()
                 }
             }
+
             is ProfileIntent.OnBack -> {
                 viewModelScope.launch { _event.emit(ProfileEvent.NavigateBack) }
             }
+
             is ProfileIntent.OnAvatarChange -> {
-                _state.update { it.copy(imageUri = intent.newUri) }
+                intent.newUri?.let { uri ->
+                    saveImageToInternalStorage(uri)
+                }
             }
-
-
         }
 
     }
+
+    private fun saveImageToInternalStorage(tempUri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>().applicationContext
+            val inputStream: InputStream? = context.contentResolver.openInputStream(tempUri)
+
+            val userId = currentUser?.userId ?: System.currentTimeMillis()
+            val newFile = File(context.filesDir, "avatar_$userId.jpg")
+            val outputStream = FileOutputStream(newFile)
+
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            val permanentUri = newFile.toUri()
+            _state.update { it.copy(imageUri = permanentUri) }
+        }
+    }
+
     private suspend fun submitProfile() {
         val currentState = _state.value
         var isValid = true
@@ -107,9 +155,12 @@ class ProfileViewModel (private val userRepository: UserRepository): ViewModel()
                 imageUri = currentState.imageUri?.toString()
             )
             userRepository.updateUser(updatedUser)
-            _state.update { it.copy(isEditing = false) }
-            _event.emit(ProfileEvent.ShowSuccessPopup)
+
+            viewModelScope.launch(Dispatchers.Main) {
+                _state.update { it.copy(isEditing = false) }
+                _event.emit(ProfileEvent.ShowSuccessPopup)
+            }
         }
     }
-
 }
+

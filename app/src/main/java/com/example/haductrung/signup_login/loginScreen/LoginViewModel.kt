@@ -1,10 +1,11 @@
-package com.example.haductrung.signup_login.LoginScreen
+package com.example.haductrung.signup_login.loginScreen
 
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.haductrung.user.UserRepository
+import com.example.haductrung.signup_login.SessionManager
+import com.example.haductrung.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,14 +28,14 @@ class LoginViewModel(
 
     init {
 
-        val savedUsername: String? = savedStateHandle.get("username")
+        val savedUsername: String? = savedStateHandle["username"]
         if (savedUsername != null) {
             _state.update { it.copy(username = savedUsername) }
             savedStateHandle.remove<String>("username")
         }
 
 
-        val savedPassword: String? = savedStateHandle.get("password")
+        val savedPassword: String? = savedStateHandle["password"]
         if (savedPassword != null) {
             _state.update { it.copy(password = savedPassword) }
             savedStateHandle.remove<String>("password")
@@ -43,23 +44,23 @@ class LoginViewModel(
 
     fun processIntent(intent: LoginIntent) {
         when (intent) {
-            is LoginIntent.onUsernameChange -> {
+            is LoginIntent.OnUsernameChange -> {
                 _state.update { it.copy(username = intent.newUsername) }
             }
 
-            is LoginIntent.onPasswordChange -> {
+            is LoginIntent.OnPasswordChange -> {
                 _state.update { it.copy(password = intent.newPassword) }
             }
 
-            is LoginIntent.onCheckedChange -> {
+            is LoginIntent.OnCheckedChange -> {
                 _state.update { it.copy(isChecked = intent.newCheckedState) }
             }
 
-            is LoginIntent.onTogglePasswordVisibility -> {
+            is LoginIntent.OnTogglePasswordVisibility -> {
                 _state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
 
-            is LoginIntent.onLoginClick -> {
+            is LoginIntent.OnLoginClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     loginUser()
                 }
@@ -82,6 +83,7 @@ class LoginViewModel(
             val encoder = BCryptPasswordEncoder()
             if (encoder.matches(currentState.password, userFromDb.passwordHash)) {
                 // correct pass
+                SessionManager.login(userFromDb.userId)
                 _event.emit(LoginEvent.NavigateToHome)
             } else {
                 // incorrect pass

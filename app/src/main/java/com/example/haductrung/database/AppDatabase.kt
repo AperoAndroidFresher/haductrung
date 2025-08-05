@@ -15,7 +15,7 @@ import com.example.haductrung.database.entity.UserEntity
 
 @Database(
     entities = [UserEntity::class, SongEntity::class, PlaylistEntity::class],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -35,7 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "music_app_database"
                 )
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 return instance

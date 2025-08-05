@@ -3,6 +3,7 @@ package com.example.haductrung.my_playlist
 import com.example.haductrung.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -89,7 +90,7 @@ private fun PlaylistListView(state: PlaylistState, onIntent: (PlaylistIntent) ->
     ) {
         items(
             items = state.playlists,
-            key = { it.playlistId } // SỬA: Dùng playlistId
+            key = { it.playlistId }
         ) { playlist ->
             PlaylistItem(
                 playlist = playlist,
@@ -177,7 +178,7 @@ private fun PlaylistItem(
                         onIntent(PlaylistIntent.OnDismissMenu)
                     }
                 )
-                Divider(color = Color.Gray.copy(alpha=0.2f))
+                HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                 CustomMenuItem(
                     text = "Remove Playlist",
                     iconResId = R.drawable.remove,
@@ -234,7 +235,7 @@ private fun PlaylistGridItem(
                             onIntent(PlaylistIntent.OnDismissMenu)
                         }
                     )
-                    Divider(color = Color.Gray.copy(alpha=0.2f))
+                    HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                     CustomMenuItem(
                         text = "Remove Playlist",
                         iconResId = R.drawable.remove,
@@ -253,7 +254,8 @@ private fun PlaylistGridItem(
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
         )
         val songCount = Converters().fromString(playlist.songIdsJson).size
         Text(
@@ -357,7 +359,7 @@ private fun PlaylistActionDialog(
                     )
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                Divider(color = Color.Gray.copy(alpha = 0.3f))
+                HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -368,12 +370,7 @@ private fun PlaylistActionDialog(
                     ) {
                         Text("Cancel", color = Color.White, fontWeight = FontWeight.Bold)
                     }
-                    Divider(
-                        modifier = Modifier
-                            .height(32.dp)
-                            .width(1.dp),
-                        color = Color.Gray.copy(alpha = 0.3f)
-                    )
+                    HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = Color.Gray.copy(alpha = 0.3f))
                     Box(
                         modifier = Modifier
                             .weight(1f)

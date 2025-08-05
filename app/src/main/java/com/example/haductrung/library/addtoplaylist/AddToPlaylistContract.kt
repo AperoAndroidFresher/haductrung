@@ -1,4 +1,4 @@
-package com.example.haductrung.library.minicomposable.addtoplaylist
+package com.example.haductrung.library.addtoplaylist
 
 import com.example.haductrung.database.entity.PlaylistEntity
 

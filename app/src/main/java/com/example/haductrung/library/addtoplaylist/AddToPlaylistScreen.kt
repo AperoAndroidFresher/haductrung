@@ -1,4 +1,4 @@
-package com.example.haductrung.library.minicomposable.addtoplaylist
+package com.example.haductrung.library.addtoplaylist
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -123,7 +123,7 @@ private fun PlaylistListView(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(playlists, key = { it.playlistId }) { playlist -> // SỬA Ở ĐÂY
+        items(playlists, key = { it.playlistId }) { playlist ->
             PlaylistSelectionItem(
                 playlist = playlist,
                 onClick = { onIntent(AddToPlaylistIntent.OnPlaylistSelected(playlist)) }
@@ -133,7 +133,7 @@ private fun PlaylistListView(
 }
 @Composable
 private fun PlaylistSelectionItem(
-    playlist: PlaylistEntity, // SỬA Ở ĐÂY
+    playlist: PlaylistEntity,
     onClick: () -> Unit
 ) {
     Row(
@@ -158,7 +158,6 @@ private fun PlaylistSelectionItem(
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp
             )
-            // SỬA Ở ĐÂY: Dùng Converter để đếm số bài hát
             val songCount = Converters().fromString(playlist.songIdsJson).size
             Text(
                 text = "$songCount songs",
@@ -168,7 +167,6 @@ private fun PlaylistSelectionItem(
         }
     }
 }
-
 @Preview(name = "Empty State")
 @Composable
 private fun AddToPlaylistScreenEmptyPreview() {

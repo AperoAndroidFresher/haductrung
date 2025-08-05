@@ -2,8 +2,7 @@ package com.example.haductrung.my_playlist.playlistdetail
 
 
 import com.example.haductrung.database.entity.PlaylistEntity
-import com.example.haductrung.my_playlist.Playlist
-import com.example.haductrung.library.Song
+import com.example.haductrung.repository.Song
 
 data class PlaylistDetailState(
     val playlist: PlaylistEntity? = null,

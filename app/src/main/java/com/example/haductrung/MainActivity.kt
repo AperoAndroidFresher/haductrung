@@ -1,6 +1,7 @@
 package com.example.haductrung
 
 import android.Manifest
+import android.app.Application
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +19,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -28,33 +31,35 @@ import com.example.haductrung.home.HomeEvent
 import com.example.haductrung.home.HomeViewModel
 import com.example.haductrung.library.LibraryEvent
 import com.example.haductrung.library.LibraryIntent
-import com.example.haductrung.library.LibraryRepository
+import com.example.haductrung.repository.LibraryRepository
 import com.example.haductrung.library.LibraryScreen
 import com.example.haductrung.library.LibraryViewModel
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistEvent
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistScreen
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistViewModel
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistEvent
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistScreen
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistViewModel
 import com.example.haductrung.my_playlist.MyPlaylistScreen
 import com.example.haductrung.my_playlist.PlaylistEvent
 import com.example.haductrung.my_playlist.PlaylistViewModel
 import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailScreen
 import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailViewModel
-import com.example.haductrung.my_playlist.playlistdetail.PlaylistRepository
+import com.example.haductrung.repository.PlaylistRepository
 import com.example.haductrung.profile.ProfileEvent
 import com.example.haductrung.profile.ProfileIntent
 import com.example.haductrung.profile.ProfileScreen
 import com.example.haductrung.profile.ProfileViewModel
-import com.example.haductrung.signup_login.LoginScreen.LoginEvent
-import com.example.haductrung.signup_login.LoginScreen.LoginScreen
-import com.example.haductrung.signup_login.LoginScreen.LoginViewModel
-import com.example.haductrung.signup_login.SignUpScreen.SignUpEvent
-import com.example.haductrung.signup_login.SignUpScreen.SignUpViewModel
-import com.example.haductrung.signup_login.SignUpScreen.SignupScreen
+import com.example.haductrung.signup_login.loginScreen.LoginEvent
+import com.example.haductrung.signup_login.loginScreen.LoginScreen
+import com.example.haductrung.signup_login.loginScreen.LoginViewModel
+import com.example.haductrung.signup_login.signUpScreen.SignUpEvent
+import com.example.haductrung.signup_login.signUpScreen.SignUpViewModel
+import com.example.haductrung.signup_login.signUpScreen.SignupScreen
 import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
 import com.example.haductrung.database.AppDatabase
-import com.example.haductrung.user.UserRepository
+import com.example.haductrung.repository.SongRepository
+import com.example.haductrung.repository.UserRepository
+
 
 @Serializable
 object Welcome
@@ -104,10 +109,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-
     NavHost(
         navController = navController,
-        startDestination = Welcome
+        startDestination = Welcome,
     ) {
         composable<Welcome> {
             WelcomeScreen(
@@ -204,15 +208,11 @@ fun AppNavigation() {
         composable<Library> {
             val context = LocalContext.current
 
-            // === THIẾT LẬP KẾT NỐI DATABASE VÀ CÁC REPOSITORY ===
             val database = AppDatabase.getDatabase(context)
             val songDao = database.songDao()
             val songRepository = SongRepository(songDao)
-            // Repository để quét nhạc từ bộ nhớ máy, giờ có tên là mediaStoreScanner cho rõ nghĩa
             val mediaStoreScanner = LibraryRepository(context)
-            // ===============================================
 
-            // Khởi tạo LibraryViewModel với đầy đủ các dependency cần thiết
             val viewModelPL: LibraryViewModel = viewModel {
                 LibraryViewModel(
                     songRepository = songRepository,
@@ -222,7 +222,6 @@ fun AppNavigation() {
             }
             val state by viewModelPL.state.collectAsStateWithLifecycle()
 
-            // Phần LaunchedEffect và gọi LibraryScreen giữ nguyên y hệt
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
@@ -262,12 +261,10 @@ fun AppNavigation() {
         dialog<AddToPlaylist> { backStackEntry ->
             val context = LocalContext.current
 
-            // Thiết lập kết nối database và repository
             val database = AppDatabase.getDatabase(context)
             val playlistDao = database.playlistDao()
             val playlistRepository = PlaylistRepository(playlistDao)
 
-            // Khởi tạo ViewModel và "tiêm" dependency vào
             val viewModel: AddToPlaylistViewModel = viewModel {
                 AddToPlaylistViewModel(
                     playlistRepository = playlistRepository,
@@ -276,7 +273,6 @@ fun AppNavigation() {
             }
             val state by viewModel.state.collectAsStateWithLifecycle()
 
-            // LaunchedEffect và gọi Screen giữ nguyên
             LaunchedEffect(Unit) {
                 viewModel.event.collect { event ->
                     when (event) {
@@ -302,9 +298,8 @@ fun AppNavigation() {
 
         composable<Playlist> {
             val database = AppDatabase.getDatabase(LocalContext.current)
-            // lấy DAO
             val playlistDao = database.playlistDao()
-            // tạo Repository từ DAO
+
             val playlistRepository = PlaylistRepository(playlistDao)
             val viewModell: PlaylistViewModel = viewModel {
                 PlaylistViewModel(playlistRepository = playlistRepository)
@@ -356,10 +351,18 @@ fun AppNavigation() {
             val database = AppDatabase.getDatabase(LocalContext.current)
             val userDao = database.userDAO()
             val userRepository = UserRepository(userDao)
+            val context = LocalContext.current
 
-            val viewModel: ProfileViewModel = viewModel {
-                ProfileViewModel(userRepository = userRepository)
-            }
+            val viewModel: ProfileViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ProfileViewModel(
+                            userRepository = userRepository,
+                            application = context.applicationContext as Application
+                        ) as T
+                    }
+                })
+
             val state by viewModel.state.collectAsStateWithLifecycle()
 
             val imagePickerLauncher = rememberLauncherForActivityResult(

@@ -1,4 +1,4 @@
-package com.example.haductrung.user
+package com.example.haductrung.repository
 
 import com.example.haductrung.database.DAO.UserDao
 import com.example.haductrung.database.entity.UserEntity

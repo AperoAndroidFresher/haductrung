@@ -17,13 +17,13 @@ data class ProfileState(
 
 //intent
 sealed interface ProfileIntent{
-    data class onNameChange(val newName: String) : ProfileIntent
-    data class onPhoneChange(val newPhone: String) : ProfileIntent
-    data class onUniversityChange(val newUniversity: String) : ProfileIntent
-    data class onDescriptionChange(val newDescription: String) : ProfileIntent
-    data object onEditClick : ProfileIntent
-    data object onSubmitClick : ProfileIntent
-    data object onAvatarClick : ProfileIntent
+    data class OnNameChange(val newName: String) : ProfileIntent
+    data class OnPhOneChange(val newPhOne: String) : ProfileIntent
+    data class OnUniversityChange(val newUniversity: String) : ProfileIntent
+    data class OnDescriptiOnChange(val newDescriptiOn: String) : ProfileIntent
+    data object OnEditClick : ProfileIntent
+    data object OnSubmitClick : ProfileIntent
+    data object OnAvatarClick : ProfileIntent
     data class OnAvatarChange(val newUri: Uri?) : ProfileIntent
     data object OnBack : ProfileIntent
 

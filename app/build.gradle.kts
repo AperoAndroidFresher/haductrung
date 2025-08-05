@@ -57,14 +57,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.coil.video)
     implementation(libs.spring.security.crypto)
-
-
+    implementation(libs.commons.logging)
+    implementation(libs.jbcrypt)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
     //noinspection KaptUsageInsteadOfKsp
     kapt(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
-
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

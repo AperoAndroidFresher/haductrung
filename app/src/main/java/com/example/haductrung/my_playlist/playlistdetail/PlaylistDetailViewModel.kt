@@ -6,10 +6,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.haductrung.SongRepository
+import com.example.haductrung.repository.SongRepository
 import com.example.haductrung.database.Converters
 import com.example.haductrung.database.entity.SongEntity
-import com.example.haductrung.library.Song
+import com.example.haductrung.repository.Song
+import com.example.haductrung.repository.PlaylistRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -66,8 +67,6 @@ class PlaylistDetailViewModel(
 
                 // Dùng converter để lấy danh sách ID
                 val songIds = Converters().fromString(playlistEntity.songIdsJson)
-
-                // Lắng nghe danh sách các bài hát tương ứng từ database
                 songRepository.getSongsByIds(songIds).collect { songEntities ->
                     _state.update {
                         it.copy(
@@ -97,7 +96,7 @@ class PlaylistDetailViewModel(
         }
     }
 
-    // Hàm tiện ích để chuyển đổi từ Entity sang model của UI
+    //  đổi từ Entity sang model
     @SuppressLint("DefaultLocale")
     private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
         return entities.map { entity ->

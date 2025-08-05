@@ -1,5 +1,7 @@
 package com.example.haductrung.library
 
+import com.example.haductrung.repository.Song
+
 
 data class LibraryState(
     val songList: List<Song> = emptyList(),
@@ -10,14 +12,14 @@ data class LibraryState(
 )
 
 sealed interface LibraryIntent {
-    data object onToggleViewClick : LibraryIntent
-    data object onToggleSortClick : LibraryIntent
-    data class onMoreClick(val song: Song) :LibraryIntent
-    data object onDismissMenu :LibraryIntent
+    data object OnToggleViewClick : LibraryIntent
+    data object OnToggleSortClick : LibraryIntent
+    data class OnMoreClick(val song: Song) :LibraryIntent
+    data object OnDismissMenu :LibraryIntent
     data class OnAddToPlaylistClick(val song: Song) : LibraryIntent
-    data class onDeleteClick(val song: Song) :LibraryIntent
+    data class OnDeleteClick(val song: Song) :LibraryIntent
     data object CheckAndLoadSongs : LibraryIntent
-    data object onRequestPermissionAgain: LibraryIntent
+    data object OnRequestPermissionAgain: LibraryIntent
 }
 sealed interface LibraryEvent{
     data object RequestPermission : LibraryEvent

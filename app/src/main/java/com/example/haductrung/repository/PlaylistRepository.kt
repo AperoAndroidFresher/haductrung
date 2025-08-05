@@ -1,8 +1,7 @@
-package com.example.haductrung.my_playlist.playlistdetail
+package com.example.haductrung.repository
 
 import com.example.haductrung.database.DAO.PlaylistDao
 import com.example.haductrung.database.entity.PlaylistEntity
-import com.example.haductrung.my_playlist.Playlist
 import kotlinx.coroutines.flow.Flow
 
 

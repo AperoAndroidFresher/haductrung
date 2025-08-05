@@ -1,4 +1,4 @@
-package com.example.haductrung.signup_login.LoginScreen
+package com.example.haductrung.signup_login.loginScreen
 //STATE
 data class LoginState(
     val username: String = "",
@@ -12,11 +12,11 @@ data class LoginState(
 
 // INTENT
 sealed interface LoginIntent {
-    data class onUsernameChange(val newUsername: String) : LoginIntent
-    data class onPasswordChange(val newPassword: String) : LoginIntent
-    data class onCheckedChange(val newCheckedState: Boolean) : LoginIntent
-    data object onLoginClick : LoginIntent
-    data object onTogglePasswordVisibility : LoginIntent
+    data class OnUsernameChange(val newUsername: String) : LoginIntent
+    data class OnPasswordChange(val newPassword: String) : LoginIntent
+    data class OnCheckedChange(val newCheckedState: Boolean) : LoginIntent
+    data object OnLoginClick : LoginIntent
+    data object OnTogglePasswordVisibility : LoginIntent
     data object SetNews : LoginIntent
 }
 

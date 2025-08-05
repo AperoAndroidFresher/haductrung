@@ -1,4 +1,4 @@
-package com.example.haductrung
+package com.example.haductrung.repository
 import com.example.haductrung.database.DAO.SongDao
 import com.example.haductrung.database.entity.SongEntity
 import kotlinx.coroutines.flow.Flow

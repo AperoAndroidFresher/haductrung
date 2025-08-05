@@ -1,4 +1,4 @@
-package com.example.haductrung.signup_login.SignUpScreen
+package com.example.haductrung.signup_login.signUpScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,7 +36,7 @@ fun SignupScreen(
         FormatTextField(
             placeholderText = "Username",
             value = state.username,
-            onValueChange = {onIntent(SignUpIntent.onUsernameChange(it))},
+            onValueChange = {onIntent(SignUpIntent.OnUsernameChange(it))},
             iconResId = R.drawable.username,
             isError = state.usernameError != null,
             errorMessage = state.usernameError
@@ -45,11 +45,11 @@ fun SignupScreen(
         FormatTextField(
             placeholderText = "Password",
             value = state.password,
-            onValueChange = {onIntent(SignUpIntent.onPasswordChange(it))},
+            onValueChange = {onIntent(SignUpIntent.OnPasswordChange(it))},
             iconResId = R.drawable.password,
             visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick ={onIntent(SignUpIntent.onTogglePasswordVisibility)} ) {
+                IconButton(onClick ={onIntent(SignUpIntent.OnTogglePasswordVisibility)} ) {
                     Image(
                         painter = painterResource(if (state.isPasswordVisible) R.drawable.eyeopen else R.drawable.eyeclose),
                         contentDescription = "Toggle password visibility",
@@ -64,11 +64,11 @@ fun SignupScreen(
         FormatTextField(
             placeholderText = "Confirm password",
             value = state.confirmPassword,
-            onValueChange = {onIntent(SignUpIntent.onConfirmPasswordChange(it))},
+            onValueChange = {onIntent(SignUpIntent.OnConfirmPasswordChange(it))},
             iconResId = R.drawable.password,
             visualTransformation = if (state.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                IconButton(onClick ={onIntent(SignUpIntent.onToggleConfirmPasswordVisibility)} ) {
+                IconButton(onClick ={onIntent(SignUpIntent.OnToggleConfirmPasswordVisibility)} ) {
                     Image(
                         painter = painterResource(if (state.isConfirmPasswordVisible) R.drawable.eyeopen else R.drawable.eyeclose),
                         contentDescription = "Toggle password visibility",
@@ -83,12 +83,12 @@ fun SignupScreen(
         FormatTextField(
             placeholderText = "Email",
             value = state.email,
-            onValueChange = {onIntent(SignUpIntent.onEmailChange(it))},
+            onValueChange = {onIntent(SignUpIntent.OnEmailChange(it))},
             iconResId = R.drawable.mail,
             isError = state.emailError != null,
             errorMessage = state.emailError
         )
         Spacer(Modifier.weight(1f))
-        FormatButton("Sign Up", onClick =  {onIntent(SignUpIntent.onSignUpClick)})
+        FormatButton("Sign Up", onClick =  {onIntent(SignUpIntent.OnSignUpClick)})
     }
 }
