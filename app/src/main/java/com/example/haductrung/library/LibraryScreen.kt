@@ -65,7 +65,7 @@ fun LibraryScreen(
                         modifier = Modifier
                             .size(35.dp)
                             .padding(end = 10.dp)
-                            .clickable { onIntent(LibraryIntent.onToggleViewClick) }
+                            .clickable { onIntent(LibraryIntent.OnToggleViewClick) }
                     )
 
                     val iconResID2 = if (state.isSortMode) R.drawable.tickv else R.drawable.sort
@@ -75,7 +75,7 @@ fun LibraryScreen(
                         contentDescription = content2,
                         modifier = Modifier
                             .size(30.dp)
-                            .clickable { onIntent(LibraryIntent.onToggleSortClick) }
+                            .clickable { onIntent(LibraryIntent.OnToggleSortClick) }
 
                     )
                 }
@@ -89,9 +89,9 @@ fun LibraryScreen(
                         val song1 = state.songList[index]
                         SongGridItem(
                             song = song1,
-                            onMoreClick = { onIntent(LibraryIntent.onMoreClick(song1)) },
+                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                             isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(LibraryIntent.onDismissMenu) },
+                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                             menuContent = {
 
                                 CustomMenuItem(
@@ -99,13 +99,13 @@ fun LibraryScreen(
                                     iconResId = R.drawable.addplaylist,
                                     onClick = {
                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
-                                        onIntent(LibraryIntent.onDismissMenu)
+                                        onIntent(LibraryIntent.OnDismissMenu)
                                     }
                                 )
                                 CustomMenuItem(
                                     text = "Share",
                                     iconResId = R.drawable.share,
-                                    onClick = { onIntent(LibraryIntent.onDismissMenu) }
+                                    onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                 )
                             }
                         )
@@ -117,9 +117,9 @@ fun LibraryScreen(
                         val song1 = state.songList[index]
                         SongItem(
                             song = song1,
-                            onMoreClick = { onIntent(LibraryIntent.onMoreClick(song1)) },
+                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                             isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(LibraryIntent.onDismissMenu) },
+                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                             isSortMode = state.isSortMode,
                             menuContent = {
                                 CustomMenuItem(
@@ -127,13 +127,13 @@ fun LibraryScreen(
                                     iconResId = R.drawable.addplaylist,
                                     onClick = {
                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
-                                        onIntent(LibraryIntent.onDismissMenu)
+                                        onIntent(LibraryIntent.OnDismissMenu)
                                     }
                                 )
                                 CustomMenuItem(
                                     text = "Share",
                                     iconResId = R.drawable.share,
-                                    onClick = { onIntent(LibraryIntent.onDismissMenu) }
+                                    onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                 )
                             }
                         )
@@ -149,7 +149,7 @@ fun LibraryScreen(
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onIntent(LibraryIntent.onRequestPermissionAgain) }
+                    modifier = Modifier.clickable { onIntent(LibraryIntent.OnRequestPermissionAgain) }
                 ) {
                     Text("Please grant access permission in settings", color = Color.White)
                 }

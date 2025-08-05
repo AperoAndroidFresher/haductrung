@@ -29,10 +29,10 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.ImageLoader
 import coil.compose.AsyncImage
-import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
 import com.example.haductrung.R
+import com.example.haductrung.repository.Song
 
 
 @Composable
@@ -41,25 +41,23 @@ fun SongGridItem(
     onMoreClick: () -> Unit,
     isMenuExpanded: Boolean,
     onDismissMenu: () -> Unit,
-    // Nhận vào nội dung menu
+
     menuContent: @Composable ColumnScope.() -> Unit
     ) {
-    val imageLoader = ImageLoader.Builder(LocalContext.current)
-        .components {
-            add(VideoFrameDecoder.Factory())
-        }
-        .build()
     Column(
         modifier = Modifier.padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
             AsyncImage(
-                model = song.albumArtUri,
-                imageLoader = imageLoader,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(song.albumArtUri)
+                    .crossfade(true)
+                    .fallback(R.drawable.grainydays) // khi uri null
+                    .error(R.drawable.cofee)
+                    .build(),
                 contentDescription = song.title,
-                placeholder = painterResource(id = R.drawable.grainydays),
-                error = painterResource(id = R.drawable.cofee),
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)

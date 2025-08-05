@@ -74,7 +74,7 @@ fun ProfileScreen(
             AppHeader(
                 title = "MY INFORMATION",
                 iconResId = R.drawable.icon,
-                onIconClick = { onIntent(ProfileIntent.onEditClick) }
+                onIconClick = { onIntent(ProfileIntent.OnEditClick) }
             )
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -99,7 +99,7 @@ fun ProfileScreen(
                             .size(60.dp)
                             .clip(CircleShape)
                             .alpha(0.6f)
-                            .clickable { onIntent(ProfileIntent.onAvatarClick) }
+                            .clickable { onIntent(ProfileIntent.OnAvatarClick) }
                     )
                 }
             }
@@ -112,7 +112,7 @@ fun ProfileScreen(
                 LabeledInput(
                     label = "NAME",
                     value = state.name,
-                    onValueChange = {onIntent(ProfileIntent.onNameChange(it))},
+                    onValueChange = {onIntent(ProfileIntent.OnNameChange(it))},
                     placeholderText = "Enter your name...",
                     modifier = Modifier.weight(1f),
                     enabled = state.isEditing,
@@ -123,7 +123,7 @@ fun ProfileScreen(
                 LabeledInput(
                     label = "PHONE NUMBER",
                     value = state.phone,
-                    onValueChange ={onIntent(ProfileIntent.onPhoneChange(it))} ,
+                    onValueChange ={onIntent(ProfileIntent.OnPhOneChange(it))} ,
                     placeholderText = "Your phone number...",
                     modifier = Modifier.weight(1f),
                     enabled = state.isEditing,
@@ -137,7 +137,7 @@ fun ProfileScreen(
             LabeledInput(
                 label = "UNIVERSITY NAME",
                 value = state.university,
-                onValueChange = {onIntent(ProfileIntent.onUniversityChange(it))},
+                onValueChange = {onIntent(ProfileIntent.OnUniversityChange(it))},
                 placeholderText = "Your University name...",
                 enabled = state.isEditing,
                 isError = state.universityError != null,
@@ -150,7 +150,7 @@ fun ProfileScreen(
             LabeledInput(
                 label = "DESCRIBE YOURSELF",
                 value = state.description,
-                onValueChange = {onIntent(ProfileIntent.onDescriptionChange(it))},
+                onValueChange = {onIntent(ProfileIntent.OnDescriptiOnChange(it))},
                 placeholderText = "Enter a description...",
                 height = 200.dp,
                 enabled = state.isEditing
@@ -159,7 +159,7 @@ fun ProfileScreen(
             if (state.isEditing) {
                 PrimaryButton(
                     text = "SUBMIT",
-                    onClick = {onIntent(ProfileIntent.onSubmitClick)},
+                    onClick = {onIntent(ProfileIntent.OnSubmitClick)},
                     modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp)
                 )
             }

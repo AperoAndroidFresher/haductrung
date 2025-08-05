@@ -1,8 +1,9 @@
-package com.example.haductrung.myplaylist
+package com.example.haductrung.my_playlist
 
 import com.example.haductrung.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.haductrung.database.Converters
+import com.example.haductrung.database.entity.PlaylistEntity
 import com.example.haductrung.library.minicomposable.CustomMenuItem
 
 
@@ -58,7 +61,6 @@ fun MyPlaylistScreen(
             }
         }
 
-        // Gọi dialog tạo mơis
         if (state.showCreatePlaylistDialog) {
             PlaylistActionDialog(
                 title = "New Playlist",
@@ -68,7 +70,6 @@ fun MyPlaylistScreen(
             )
         }
 
-        // Gọi dialog đổi tên
         state.playlistToRename?.let { playlistToRename ->
             PlaylistActionDialog(
                 title = "Rename Playlist",
@@ -76,17 +77,12 @@ fun MyPlaylistScreen(
                 initialValue = playlistToRename.name,
                 onDismiss = { onIntent(PlaylistIntent.OnDismissRenamePlaylistDialog) },
                 onConfirm = { newName ->
-                    onIntent(PlaylistIntent.OnConfirmRenamePlaylist(playlistToRename, newName))
+                    onIntent(PlaylistIntent.OnConfirmRenamePlaylist(newName))
                 }
             )
         }
     }
-}
-
-
-
-
-@Composable
+}@Composable
 private fun PlaylistListView(state: PlaylistState, onIntent: (PlaylistIntent) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -94,17 +90,16 @@ private fun PlaylistListView(state: PlaylistState, onIntent: (PlaylistIntent) ->
     ) {
         items(
             items = state.playlists,
-            key = { "list-${it.id}" }
+            key = { it.playlistId }
         ) { playlist ->
             PlaylistItem(
                 playlist = playlist,
-                isMenuExpanded = (state.playlistWithMenu == playlist.id),
+                isMenuExpanded = (state.playlistWithMenu == playlist.playlistId.toString()), // SỬA: Dùng playlistId
                 onIntent = onIntent
             )
         }
     }
 }
-
 @Composable
 private fun PlaylistGridView(state: PlaylistState, onIntent: (PlaylistIntent) -> Unit) {
     LazyVerticalGrid(
@@ -114,20 +109,19 @@ private fun PlaylistGridView(state: PlaylistState, onIntent: (PlaylistIntent) ->
     ) {
         items(
             items = state.playlists,
-            key = { "grid-${it.id}" }
+            key = { it.playlistId }
         ) { playlist ->
             PlaylistGridItem(
                 playlist = playlist,
-                isMenuExpanded = (state.playlistWithMenu == playlist.id),
+                isMenuExpanded = (state.playlistWithMenu == playlist.playlistId.toString()), // SỬA: Dùng playlistId
                 onIntent = onIntent
             )
         }
     }
 }
-
 @Composable
 private fun PlaylistItem(
-    playlist: Playlist,
+    playlist: PlaylistEntity,
     isMenuExpanded: Boolean,
     onIntent: (PlaylistIntent) -> Unit
 ) {
@@ -156,8 +150,9 @@ private fun PlaylistItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            val songCount = Converters().fromString(playlist.songIdsJson).size
             Text(
-                text = "${playlist.songIds.size} songs",
+                text = "$songCount songs",
                 color = Color.LightGray,
                 fontSize = 14.sp
             )
@@ -175,7 +170,7 @@ private fun PlaylistItem(
                 onDismissRequest = { onIntent(PlaylistIntent.OnDismissMenu) },
                 modifier = Modifier.background(Color.DarkGray)
             ) {
-                CustomMenuItem (
+                CustomMenuItem(
                     text = "Rename",
                     iconResId = R.drawable.rename,
                     onClick = {
@@ -183,6 +178,7 @@ private fun PlaylistItem(
                         onIntent(PlaylistIntent.OnDismissMenu)
                     }
                 )
+                HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                 CustomMenuItem(
                     text = "Remove Playlist",
                     iconResId = R.drawable.remove,
@@ -197,7 +193,7 @@ private fun PlaylistItem(
 }
 @Composable
 private fun PlaylistGridItem(
-    playlist: Playlist,
+    playlist: PlaylistEntity,
     isMenuExpanded: Boolean,
     onIntent: (PlaylistIntent) -> Unit
 ) {
@@ -239,6 +235,7 @@ private fun PlaylistGridItem(
                             onIntent(PlaylistIntent.OnDismissMenu)
                         }
                     )
+                    HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                     CustomMenuItem(
                         text = "Remove Playlist",
                         iconResId = R.drawable.remove,
@@ -257,57 +254,37 @@ private fun PlaylistGridItem(
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
         )
+        val songCount = Converters().fromString(playlist.songIdsJson).size
         Text(
-            text = "${playlist.songIds.size} songs",
+            text = "$songCount songs",
             color = Color.LightGray,
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
-
-
 @Composable
 private fun EmptyPlaylistView(onIntent: (PlaylistIntent) -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "You don't have any playlists.\nClick the \"+\" button to add",
-                color = Color.Gray,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(text = "You don't have any playlists.\nClick the \"+\" button to add", color = Color.Gray, fontSize = 16.sp, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(24.dp))
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .border(
-                        width = 2.dp,
-                        color = Color.Gray,
-                        shape = RoundedCornerShape(24.dp)
-                    )
+                    .border(width = 2.dp, color = Color.Gray, shape = RoundedCornerShape(24.dp))
                     .clickable { onIntent(PlaylistIntent.OnCreatePlaylistClick) },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.plus),
-                    contentDescription = "Create Playlist",
-                    modifier = Modifier.size(40.dp)
-                )
+                Image(painter = painterResource(id = R.drawable.plus), contentDescription = "Create Playlist", modifier = Modifier.size(40.dp))
             }
         }
     }
 }
-
 @Composable
 private fun PlaylistTopBar(
     isGridView: Boolean,
@@ -329,26 +306,10 @@ private fun PlaylistTopBar(
             modifier = Modifier.weight(1f)
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Image(
-                painter = painterResource(id = R.drawable.plus),
-                contentDescription = "Create Playlist",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable { onIntent(PlaylistIntent.OnCreatePlaylistClick) })
+            Image(painter = painterResource(id = R.drawable.plus), contentDescription = "Create Playlist", modifier = Modifier.size(30.dp).clickable { onIntent(PlaylistIntent.OnCreatePlaylistClick) })
             val viewIcon = if (isGridView) R.drawable.list else R.drawable.grid
-            Image(
-                painter = painterResource(id = viewIcon),
-                contentDescription = "Toggle View",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable { onIntent(PlaylistIntent.OnToggleViewClick) })
-            val sortIcon = if (isSortMode) R.drawable.tickv else R.drawable.sort
-            Image(
-                painter = painterResource(id = sortIcon),
-                contentDescription = "Sort",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable { onIntent(PlaylistIntent.OnToggleSortClick) })
+            Image(painter = painterResource(id = viewIcon), contentDescription = "Toggle View", modifier = Modifier.size(30.dp).clickable { onIntent(PlaylistIntent.OnToggleViewClick) })
+
         }
     }
 }
@@ -398,7 +359,7 @@ private fun PlaylistActionDialog(
                     )
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                Divider(color = Color.Gray.copy(alpha = 0.3f))
+                HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -409,12 +370,7 @@ private fun PlaylistActionDialog(
                     ) {
                         Text("Cancel", color = Color.White, fontWeight = FontWeight.Bold)
                     }
-                    Divider(
-                        modifier = Modifier
-                            .height(32.dp)
-                            .width(1.dp),
-                        color = Color.Gray.copy(alpha = 0.3f)
-                    )
+                    HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = Color.Gray.copy(alpha = 0.3f))
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -430,7 +386,7 @@ private fun PlaylistActionDialog(
 }
 
 
-// CÁC PREVIEW
+
 
 @Preview(name = "Create Dialog", showBackground = true)
 @Composable
@@ -453,33 +409,6 @@ fun PlaylistActionDialog_RenamePreview() {
 fun MyPlaylistScreenEmptyPreview() {
     MyPlaylistScreen(
         state = PlaylistState(playlists = emptyList()),
-        onIntent = {}
-    )
-}
-
-@Preview(name = "List View", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-fun MyPlaylistScreenListPreview() {
-    MyPlaylistScreen(
-        state = PlaylistState(playlists = listOf(
-            Playlist(name = "Running Mix", songIds = listOf(1,2,3)),
-            Playlist(name = "Sad Vibes", songIds = listOf(4,5))
-        )),
-        onIntent = {}
-    )
-}
-
-@Preview(name = "Grid View", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-fun MyPlaylistScreenGridPreview() {
-    MyPlaylistScreen(
-        state = PlaylistState(
-            playlists = listOf(
-                Playlist(name = "Running Mix", songIds = listOf(1,2,3)),
-                Playlist(name = "Sad Vibes", songIds = listOf(4,5))
-            ),
-            isGridView = true
-        ),
         onIntent = {}
     )
 }

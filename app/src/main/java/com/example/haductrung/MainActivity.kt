@@ -1,6 +1,7 @@
 package com.example.haductrung
 
 import android.Manifest
+import android.app.Application
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,6 +19,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -28,31 +31,35 @@ import com.example.haductrung.home.HomeEvent
 import com.example.haductrung.home.HomeViewModel
 import com.example.haductrung.library.LibraryEvent
 import com.example.haductrung.library.LibraryIntent
-import com.example.haductrung.library.LibraryRepository
+import com.example.haductrung.repository.LibraryRepository
 import com.example.haductrung.library.LibraryScreen
 import com.example.haductrung.library.LibraryViewModel
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistEvent
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistScreen
-import com.example.haductrung.library.minicomposable.addtoplaylist.AddToPlaylistViewModel
-import com.example.haductrung.myplaylist.MyPlaylistScreen
-import com.example.haductrung.myplaylist.PlaylistEvent
-import com.example.haductrung.myplaylist.PlaylistViewModel
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistDetailScreen
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistDetailViewModel
-import com.example.haductrung.myplaylist.playlistdetail.PlaylistRepository
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistEvent
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistScreen
+import com.example.haductrung.library.addtoplaylist.AddToPlaylistViewModel
+import com.example.haductrung.my_playlist.MyPlaylistScreen
+import com.example.haductrung.my_playlist.PlaylistEvent
+import com.example.haductrung.my_playlist.PlaylistViewModel
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailScreen
+import com.example.haductrung.my_playlist.playlistdetail.PlaylistDetailViewModel
+import com.example.haductrung.repository.PlaylistRepository
 import com.example.haductrung.profile.ProfileEvent
 import com.example.haductrung.profile.ProfileIntent
 import com.example.haductrung.profile.ProfileScreen
 import com.example.haductrung.profile.ProfileViewModel
-import com.example.haductrung.signup_login.LoginScreen.LoginEvent
-import com.example.haductrung.signup_login.LoginScreen.LoginScreen
-import com.example.haductrung.signup_login.LoginScreen.LoginViewModel
-import com.example.haductrung.signup_login.SignUpScreen.SignUpEvent
-import com.example.haductrung.signup_login.SignUpScreen.SignUpViewModel
-import com.example.haductrung.signup_login.SignUpScreen.SignupScreen
+import com.example.haductrung.signup_login.loginScreen.LoginEvent
+import com.example.haductrung.signup_login.loginScreen.LoginScreen
+import com.example.haductrung.signup_login.loginScreen.LoginViewModel
+import com.example.haductrung.signup_login.signUpScreen.SignUpEvent
+import com.example.haductrung.signup_login.signUpScreen.SignUpViewModel
+import com.example.haductrung.signup_login.signUpScreen.SignupScreen
 import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
+import com.example.haductrung.database.AppDatabase
+import com.example.haductrung.repository.SongRepository
+import com.example.haductrung.repository.UserRepository
+
 
 @Serializable
 object Welcome
@@ -102,15 +109,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-
-    val viewModel: ProfileViewModel = viewModel()
-    val viewModelSU: SignUpViewModel = viewModel()
-    val viewModellg: LoginViewModel = viewModel()
-
-
     NavHost(
         navController = navController,
-        startDestination = Welcome
+        startDestination = Welcome,
     ) {
         composable<Welcome> {
             WelcomeScreen(
@@ -122,10 +123,18 @@ fun AppNavigation() {
             )
         }
 
-        composable<Login> {
+        composable<Login> {backStackEntry ->
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
 
+            val viewModellg: LoginViewModel = viewModel {
+                LoginViewModel(
+                    userRepository = userRepository,
+                    savedStateHandle = backStackEntry.savedStateHandle
+                )
+            }
             val state by viewModellg.state.collectAsStateWithLifecycle()
-
             LaunchedEffect(Unit) {
                 viewModellg.event.collect { event ->
                     when (event) {
@@ -147,7 +156,13 @@ fun AppNavigation() {
             )
         }
         composable<SignUp> {
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
 
+            val viewModelSU: SignUpViewModel = viewModel {
+                SignUpViewModel(userRepository = userRepository)
+            }
             val state by viewModelSU.state.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
                 viewModelSU.event.collect { event ->
@@ -192,10 +207,21 @@ fun AppNavigation() {
         }
         composable<Library> {
             val context = LocalContext.current
+
+            val database = AppDatabase.getDatabase(context)
+            val songDao = database.songDao()
+            val songRepository = SongRepository(songDao)
+            val mediaStoreScanner = LibraryRepository(context)
+
             val viewModelPL: LibraryViewModel = viewModel {
-                LibraryViewModel(LibraryRepository(context), context.applicationContext)
+                LibraryViewModel(
+                    songRepository = songRepository,
+                    mediaStoreScanner = mediaStoreScanner,
+                    applicationContext = context.applicationContext
+                )
             }
             val state by viewModelPL.state.collectAsStateWithLifecycle()
+
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
@@ -203,6 +229,7 @@ fun AppNavigation() {
                     viewModelPL.processIntent(LibraryIntent.CheckAndLoadSongs)
                 }
             }
+
             LaunchedEffect(Unit) {
                 viewModelPL.event.collect { event ->
                     when (event) {
@@ -215,16 +242,17 @@ fun AppNavigation() {
                                 }
                             permissionLauncher.launch(permission)
                         }
-
                         is LibraryEvent.NavigateToAddToPlaylistScreen -> {
                             navController.navigate(AddToPlaylist(songId = event.song.id))
                         }
                     }
                 }
             }
+
             LaunchedEffect(Unit) {
                 viewModelPL.processIntent(LibraryIntent.CheckAndLoadSongs)
             }
+
             LibraryScreen(
                 state = state,
                 onIntent = viewModelPL::processIntent
@@ -232,33 +260,30 @@ fun AppNavigation() {
         }
         dialog<AddToPlaylist> { backStackEntry ->
             val context = LocalContext.current
-            val viewModelAdd: AddToPlaylistViewModel = viewModel {
+
+            val database = AppDatabase.getDatabase(context)
+            val playlistDao = database.playlistDao()
+            val playlistRepository = PlaylistRepository(playlistDao)
+
+            val viewModel: AddToPlaylistViewModel = viewModel {
                 AddToPlaylistViewModel(
-                    savedStateHandle = backStackEntry.savedStateHandle,
-                    playlistRepository = PlaylistRepository // Lấy repository
+                    playlistRepository = playlistRepository,
+                    savedStateHandle = backStackEntry.savedStateHandle
                 )
             }
-            val state by viewModelAdd.state.collectAsStateWithLifecycle()
+            val state by viewModel.state.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
-                viewModelAdd.event.collect { event ->
+                viewModel.event.collect { event ->
                     when (event) {
-                        is AddToPlaylistEvent.GoBack -> {
-                            navController.popBackStack()
-                        }
-
+                        is AddToPlaylistEvent.GoBack -> navController.popBackStack()
                         is AddToPlaylistEvent.NavigateToMyPlaylist -> {
                             navController.navigate(Playlist) {
                                 popUpTo<AddToPlaylist> { inclusive = true }
                             }
                         }
-
                         is AddToPlaylistEvent.ShowSuccessMessage -> {
-                            Toast.makeText(
-                                context,
-                                "Added to ${event.playlistName}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(context, "Added to ${event.playlistName}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -266,13 +291,20 @@ fun AppNavigation() {
 
             AddToPlaylistScreen(
                 state = state,
-                onIntent = viewModelAdd::processIntent,
+                onIntent = viewModel::processIntent,
                 onBack = { navController.popBackStack() }
             )
         }
 
         composable<Playlist> {
-            val viewModell: PlaylistViewModel = viewModel()
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val playlistDao = database.playlistDao()
+
+            val playlistRepository = PlaylistRepository(playlistDao)
+            val viewModell: PlaylistViewModel = viewModel {
+                PlaylistViewModel(playlistRepository = playlistRepository)
+            }
+
             val state by viewModell.state.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
@@ -290,16 +322,22 @@ fun AppNavigation() {
                 onIntent = viewModell::processIntent
             )
         }
-
         composable<PlaylistDetail> { backStackEntry ->
             val context = LocalContext.current
-            val libraryRepository = LibraryRepository(context)
 
+
+            val database = AppDatabase.getDatabase(context)
+
+            val playlistDao = database.playlistDao()
+            val playlistRepository = PlaylistRepository(playlistDao)
+
+            val songDao = database.songDao()
+            val songRepository = SongRepository(songDao)
             val viewModelDetail: PlaylistDetailViewModel = viewModel {
                 PlaylistDetailViewModel(
                     savedStateHandle = backStackEntry.savedStateHandle,
-                    playlistRepository = PlaylistRepository,
-                    libraryRepository = libraryRepository
+                    playlistRepository = playlistRepository,
+                    songRepository = songRepository
                 )
             }
             val state by viewModelDetail.state.collectAsStateWithLifecycle()
@@ -310,6 +348,20 @@ fun AppNavigation() {
             )
         }
         composable<Profile> {
+            val database = AppDatabase.getDatabase(LocalContext.current)
+            val userDao = database.userDAO()
+            val userRepository = UserRepository(userDao)
+            val context = LocalContext.current
+
+            val viewModel: ProfileViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ProfileViewModel(
+                            userRepository = userRepository,
+                            application = context.applicationContext as Application
+                        ) as T
+                    }
+                })
 
             val state by viewModel.state.collectAsStateWithLifecycle()
 

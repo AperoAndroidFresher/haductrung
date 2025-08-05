@@ -1,11 +1,11 @@
-package com.example.haductrung.myplaylist.playlistdetail
+package com.example.haductrung.my_playlist.playlistdetail
 
 
-import com.example.haductrung.myplaylist.Playlist
-import com.example.haductrung.library.minicomposable.Song
+import com.example.haductrung.database.entity.PlaylistEntity
+import com.example.haductrung.repository.Song
 
 data class PlaylistDetailState(
-    val playlist: Playlist? = null,
+    val playlist: PlaylistEntity? = null,
     val songs: List<Song> = emptyList(),
     val isGridView: Boolean = false,
     val isSortMode: Boolean = false,

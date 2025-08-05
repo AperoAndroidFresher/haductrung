@@ -9,30 +9,59 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import android.Manifest
+import android.annotation.SuppressLint
+import com.example.haductrung.repository.SongRepository
+import com.example.haductrung.database.entity.SongEntity
+import java.util.concurrent.TimeUnit
+import androidx.core.net.toUri
+import com.example.haductrung.repository.LibraryRepository
+import com.example.haductrung.repository.Song
 
 
 class LibraryViewModel(
-    private val repository: LibraryRepository,
+    private val songRepository: SongRepository,
+    private val mediaStoreScanner: LibraryRepository,
     private val applicationContext: Context
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LibraryState())
     val state = _state.asStateFlow()
+
     private val _event = MutableSharedFlow<LibraryEvent>()
     val event = _event.asSharedFlow()
 
+    init {
+
+        observeSongsFromDatabase()
+    }
+
+    private fun observeSongsFromDatabase() {
+        viewModelScope.launch {
+            songRepository.getAllSongs().collect { songsFromDb ->
+                _state.update { currentState ->
+                    val mappedSongs = mapEntitiesToSongs(songsFromDb)
+                    val finalList = if (currentState.isSortMode) {
+                        mappedSongs.sortedBy { it.title }
+                    } else {
+                        mappedSongs
+                    }
+                    currentState.copy(songList = finalList)
+                }
+            }
+        }
+    }
+
     fun processIntent(intent: LibraryIntent) {
         when (intent) {
-            is LibraryIntent.onToggleViewClick -> {
+            is LibraryIntent.OnToggleViewClick -> {
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
-
-            is LibraryIntent.onToggleSortClick -> {
+            is LibraryIntent.OnToggleSortClick -> {
                 val currentState = _state.value
                 val sortedList = if (!currentState.isSortMode) {
                     currentState.songList.sortedBy { it.title }
@@ -41,38 +70,28 @@ class LibraryViewModel(
                 }
                 _state.update { it.copy(isSortMode = !it.isSortMode, songList = sortedList) }
             }
-
-            is LibraryIntent.onMoreClick -> {
+            is LibraryIntent.OnMoreClick -> {
                 _state.update { it.copy(songWithMenu = intent.song.id) }
             }
-
-            is LibraryIntent.onDismissMenu -> {
+            is LibraryIntent.OnDismissMenu -> {
                 _state.update { it.copy(songWithMenu = null) }
             }
-
-            is LibraryIntent.onDeleteClick -> {
-                val newList = _state.value.songList.toMutableList().apply {
-                    removeIf { it.id == intent.song.id }
-                }
-                _state.update { it.copy(songList = newList, songWithMenu = null) }
-            }
-
             is LibraryIntent.CheckAndLoadSongs -> {
                 checkPermissionAndLoad()
             }
-
-            is LibraryIntent.onRequestPermissionAgain -> {
+            is LibraryIntent.OnRequestPermissionAgain -> {
                 viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
             }
-
             is LibraryIntent.OnAddToPlaylistClick -> {
                 viewModelScope.launch {
                     _state.update { it.copy(songWithMenu = null) }
                     _event.emit(LibraryEvent.NavigateToAddToPlaylistScreen(intent.song))
                 }
             }
+            else -> {}
         }
     }
+
     private fun checkPermissionAndLoad() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
@@ -86,20 +105,49 @@ class LibraryViewModel(
         _state.update { it.copy(hasPermission = isGranted) }
 
         if (isGranted) {
-            loadSongs()
+            syncSongsFromDeviceToDb()
         } else {
-
             viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
         }
     }
-    fun loadSongs() {
-        if (state.value.songList.isNotEmpty()) return
-
+    private fun syncSongsFromDeviceToDb() {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = repository.getAudioData()
-            withContext(Dispatchers.Main) {
-                _state.update { it.copy(songList = songs) }
+            // lấy bài hát từ bộ nhớ máy
+            val deviceSongs = mediaStoreScanner.getAudioData()
+
+            // Chuyển đổi database
+            val songEntities = deviceSongs.map { song ->
+                SongEntity(
+                    songId = song.id,
+                    title = song.title,
+                    artist = song.artist,
+                    durationMs = song.durationMs,
+                    filePath = song.filePath,
+                    albumArtUri = song.albumArtUri?.toString()
+                )
             }
+
+            songRepository.insertAll(songEntities)
+
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
+        return entities.map { entity ->
+            Song(
+                id = entity.songId,
+                title = entity.title,
+                artist = entity.artist,
+                duration = String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(entity.durationMs),
+                    TimeUnit.MILLISECONDS.toSeconds(entity.durationMs) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(entity.durationMs))
+                ),
+                durationMs = entity.durationMs,
+                filePath = entity.filePath,
+                albumArtUri = entity.albumArtUri?.toUri()
+            )
         }
     }
 }
