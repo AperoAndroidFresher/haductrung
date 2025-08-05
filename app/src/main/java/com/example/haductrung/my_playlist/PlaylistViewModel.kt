@@ -22,91 +22,97 @@ class PlaylistViewModel(private val playlistRepository: PlaylistRepository) : Vi
     val event = _event.asSharedFlow()
 
     init {
-        val currentUserId = SessionManager.currentUserId.value
+        observeUserSession()
+    }
 
-        if (currentUserId != null) {
-            viewModelScope.launch {
-                playlistRepository.getPlayListForUser(currentUserId).collect { playlistsFromDb ->
-                    _state.update { it.copy(playlists = playlistsFromDb) }
+    fun processIntent(intent: PlaylistIntent) {
+        when (intent) {
+            is PlaylistIntent.OnToggleViewClick -> _state.update { it.copy(isGridView = !it.isGridView) }
+            is PlaylistIntent.OnCreatePlaylistClick -> _state.update {
+                it.copy(
+                    showCreatePlaylistDialog = true
+                )
+            }
+
+            is PlaylistIntent.OnDismissCreatePlaylistDialog -> _state.update {
+                it.copy(
+                    showCreatePlaylistDialog = false
+                )
+            }
+
+            is PlaylistIntent.OnMoreClick -> _state.update { it.copy(playlistWithMenu = intent.playlist.playlistId.toString()) }
+            is PlaylistIntent.OnDismissMenu -> _state.update { it.copy(playlistWithMenu = null) }
+            is PlaylistIntent.OnRenamePlaylistClick -> _state.update {
+                it.copy(
+                    playlistToRename = intent.playlist,
+                    playlistWithMenu = null
+                )
+            }
+
+            is PlaylistIntent.OnDismissRenamePlaylistDialog -> _state.update {
+                it.copy(
+                    playlistToRename = null
+                )
+            }
+
+            is PlaylistIntent.OnPlaylistClick -> navigateToDetail(intent.playlist)
+            is PlaylistIntent.OnConfirmCreatePlaylist -> createNewPlaylist(intent.name)
+            is PlaylistIntent.OnRemovePlaylist -> removePlaylist(intent.playlist)
+            is PlaylistIntent.OnConfirmRenamePlaylist -> renamePlaylist(intent.newName)
+
+            else -> {}
+        }
+    }
+
+    private fun observeUserSession() {
+        viewModelScope.launch {
+            SessionManager.currentUserId.collect { userId ->
+                if (userId != null) {
+                    playlistRepository.getPlayListForUser(userId).collect { playlistsFromDb ->
+                        _state.update { it.copy(playlists = playlistsFromDb) }
+                    }
+                } else {
+                    _state.update { it.copy(playlists = emptyList()) }
                 }
             }
         }
     }
 
-    fun processIntent(intent: PlaylistIntent) {
-        when (intent) {
-            is PlaylistIntent.OnToggleViewClick -> {
-                _state.update { it.copy(isGridView = !it.isGridView) }
-            }
+    private fun createNewPlaylist(name: String) {
+        if (name.isBlank()) return
+        val currentUserId = SessionManager.currentUserId.value ?: return
 
-            is PlaylistIntent.OnCreatePlaylistClick -> {
-                _state.update { it.copy(showCreatePlaylistDialog = true) }
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            val newPlaylist = PlaylistEntity(
+                name = name,
+                creatorUserId = currentUserId,
+                songIdsJson = ""
+            )
+            playlistRepository.createPlaylist(newPlaylist)
+            _state.update { it.copy(showCreatePlaylistDialog = false) }
+        }
+    }
 
-            is PlaylistIntent.OnDismissCreatePlaylistDialog -> {
-                _state.update { it.copy(showCreatePlaylistDialog = false) }
-            }
+    private fun removePlaylist(playlist: PlaylistEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            playlistRepository.deletePlaylist(playlist)
+        }
+    }
 
-            is PlaylistIntent.OnMoreClick -> {
-                _state.update { it.copy(playlistWithMenu = intent.playlist.playlistId.toString()) }
-            }
+    private fun renamePlaylist(newName: String) {
+        val playlistToRename = state.value.playlistToRename ?: return
+        if (newName.isBlank()) return
 
-            is PlaylistIntent.OnDismissMenu -> {
-                _state.update { it.copy(playlistWithMenu = null) }
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedPlaylist = playlistToRename.copy(name = newName)
+            playlistRepository.updatePlaylist(updatedPlaylist)
+            _state.update { it.copy(playlistToRename = null) }
+        }
+    }
 
-            is PlaylistIntent.OnRenamePlaylistClick -> {
-                _state.update {
-                    it.copy(
-                        playlistToRename = intent.playlist,
-                        playlistWithMenu = null
-                    )
-                }
-            }
-
-            is PlaylistIntent.OnDismissRenamePlaylistDialog -> {
-                _state.update { it.copy(playlistToRename = null) }
-            }
-
-            is PlaylistIntent.OnPlaylistClick -> {
-                viewModelScope.launch {
-                    _event.emit(PlaylistEvent.NavigateToPlaylistDetail(intent.playlist.playlistId.toString()))
-                }
-            }
-
-            is PlaylistIntent.OnConfirmCreatePlaylist -> {
-                if (intent.name.isNotBlank()) {
-
-                    val currentUserId = SessionManager.currentUserId.value
-                    if (currentUserId != null) {
-                        viewModelScope.launch(Dispatchers.IO) {
-                            val newPlaylist = PlaylistEntity(
-                                name = intent.name,
-                                creatorUserId = currentUserId,
-                                songIdsJson = ""
-                            )
-                            playlistRepository.createPlaylist(newPlaylist)
-                        }
-                    }
-                    _state.update { it.copy(showCreatePlaylistDialog = false) }
-                }
-            }
-            is PlaylistIntent.OnRemovePlaylist -> {
-                viewModelScope.launch(Dispatchers.IO) {
-                    playlistRepository.deletePlaylist(intent.playlist)
-                }
-            }
-            is PlaylistIntent.OnConfirmRenamePlaylist -> {
-                val playlistToRename = state.value.playlistToRename
-                if (playlistToRename != null && intent.newName.isNotBlank()) {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        val updatedPlaylist = playlistToRename.copy(name = intent.newName)
-                        playlistRepository.updatePlaylist(updatedPlaylist)
-                    }
-                }
-                _state.update { it.copy(playlistToRename = null) }
-            }
-            else -> {}
+    private fun navigateToDetail(playlist: PlaylistEntity) {
+        viewModelScope.launch {
+            _event.emit(PlaylistEvent.NavigateToPlaylistDetail(playlist.playlistId.toString()))
         }
     }
 }
