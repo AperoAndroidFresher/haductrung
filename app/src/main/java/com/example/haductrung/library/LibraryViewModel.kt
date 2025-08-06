@@ -19,8 +19,12 @@ import com.example.haductrung.repository.SongRepository
 import com.example.haductrung.database.entity.SongEntity
 import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
+import com.example.haductrung.library.remote.ApiClient
+import com.example.haductrung.library.remote.RemoteSong
 import com.example.haductrung.repository.LibraryRepository
 import com.example.haductrung.repository.Song
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 
 class LibraryViewModel(
@@ -36,59 +40,58 @@ class LibraryViewModel(
     val event = _event.asSharedFlow()
 
     init {
-
-        observeSongsFromDatabase()
-    }
-
-    private fun observeSongsFromDatabase() {
-        viewModelScope.launch {
-            songRepository.getAllSongs().collect { songsFromDb ->
-                _state.update { currentState ->
-                    val mappedSongs = mapEntitiesToSongs(songsFromDb)
-                    val finalList = if (currentState.isSortMode) {
-                        mappedSongs.sortedBy { it.title }
-                    } else {
-                        mappedSongs
-                    }
-                    currentState.copy(songList = finalList)
-                }
-            }
-        }
+        observeLocalSongsFromDatabase()
     }
 
     fun processIntent(intent: LibraryIntent) {
         when (intent) {
-            is LibraryIntent.OnToggleViewClick -> {
-                _state.update { it.copy(isGridView = !it.isGridView) }
+            is LibraryIntent.OnTabSelected -> handleTabSelection(intent.tab)
+            is LibraryIntent.RetryFetchRemoteSongs -> fetchRemoteSongs()
+            is LibraryIntent.OnToggleViewClick -> _state.update { it.copy(isGridView = !it.isGridView) }
+            is LibraryIntent.OnToggleSortClick -> _state.update { it.copy(isSortMode = !it.isSortMode) }
+            is LibraryIntent.OnMoreClick -> _state.update { it.copy(songWithMenu = intent.song.id) }
+            is LibraryIntent.OnDismissMenu -> _state.update { it.copy(songWithMenu = null) }
+            is LibraryIntent.CheckAndLoadSongs -> checkPermissionAndLoad()
+            is LibraryIntent.OnRequestPermissionAgain -> viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
+            is LibraryIntent.OnAddToPlaylistClick -> navigateToAddToPlaylist(intent.song)
+        }
+    }
+
+    private fun observeLocalSongsFromDatabase() {
+        songRepository.getAllSongs()
+            .onEach { songsFromDb ->
+                _state.update { it.copy(songList = mapEntitiesToUiSongs(songsFromDb)) }
             }
-            is LibraryIntent.OnToggleSortClick -> {
-                val currentState = _state.value
-                val sortedList = if (!currentState.isSortMode) {
-                    currentState.songList.sortedBy { it.title }
-                } else {
-                    currentState.songList
-                }
-                _state.update { it.copy(isSortMode = !it.isSortMode, songList = sortedList) }
+            .launchIn(viewModelScope)
+    }
+
+    private fun handleTabSelection(tab: LibraryTab) {
+        _state.update { it.copy(selectedTab = tab) }
+        if (tab == LibraryTab.REMOTE) {
+            fetchRemoteSongs()
+        }
+    }
+
+    private fun fetchRemoteSongs() {
+        //  gọi lại API nếu chưa có dữ liệu or lỗi
+        if (state.value.remoteState is RemoteState.Success) return
+
+        _state.update { it.copy(remoteState = RemoteState.Loading) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val remoteSongs = ApiClient.build().getRemoteSongs()
+                val uiSongs = mapRemoteToUiSongs(remoteSongs)
+                _state.update { it.copy(remoteState = RemoteState.Success(uiSongs)) }
+            } catch (e: Exception) {
+                _state.update { it.copy(remoteState = RemoteState.Error("Failed to fetch data")) }
             }
-            is LibraryIntent.OnMoreClick -> {
-                _state.update { it.copy(songWithMenu = intent.song.id) }
-            }
-            is LibraryIntent.OnDismissMenu -> {
-                _state.update { it.copy(songWithMenu = null) }
-            }
-            is LibraryIntent.CheckAndLoadSongs -> {
-                checkPermissionAndLoad()
-            }
-            is LibraryIntent.OnRequestPermissionAgain -> {
-                viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
-            }
-            is LibraryIntent.OnAddToPlaylistClick -> {
-                viewModelScope.launch {
-                    _state.update { it.copy(songWithMenu = null) }
-                    _event.emit(LibraryEvent.NavigateToAddToPlaylistScreen(intent.song))
-                }
-            }
-            else -> {}
+        }
+    }
+
+    private fun navigateToAddToPlaylist(song: Song) {
+        viewModelScope.launch {
+            _state.update { it.copy(songWithMenu = null) }
+            _event.emit(LibraryEvent.NavigateToAddToPlaylistScreen(song))
         }
     }
 
@@ -98,24 +101,18 @@ class LibraryViewModel(
         } else {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
-
-        val isGranted =
-            applicationContext.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-
+        val isGranted = applicationContext.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
         _state.update { it.copy(hasPermission = isGranted) }
-
         if (isGranted) {
             syncSongsFromDeviceToDb()
         } else {
             viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
         }
     }
+
     private fun syncSongsFromDeviceToDb() {
         viewModelScope.launch(Dispatchers.IO) {
-            // lấy bài hát từ bộ nhớ máy
             val deviceSongs = mediaStoreScanner.getAudioData()
-
-            // Chuyển đổi database
             val songEntities = deviceSongs.map { song ->
                 SongEntity(
                     songId = song.id,
@@ -126,14 +123,11 @@ class LibraryViewModel(
                     albumArtUri = song.albumArtUri?.toString()
                 )
             }
-
             songRepository.insertAll(songEntities)
-
         }
     }
-
     @SuppressLint("DefaultLocale")
-    private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
+    private fun mapEntitiesToUiSongs(entities: List<SongEntity>): List<Song> {
         return entities.map { entity ->
             Song(
                 id = entity.songId,
@@ -147,6 +141,28 @@ class LibraryViewModel(
                 durationMs = entity.durationMs,
                 filePath = entity.filePath,
                 albumArtUri = entity.albumArtUri?.toUri()
+            )
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    private fun mapRemoteToUiSongs(remoteSongs: List<RemoteSong>): List<Song> {
+        return remoteSongs.map { remote ->
+            val durationMs = remote.duration.toLongOrNull() ?: 0L
+            val durationFormatted = String.format("%02d:%02d",
+                TimeUnit.MILLISECONDS.toMinutes(durationMs),
+                TimeUnit.MILLISECONDS.toSeconds(durationMs) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMs))
+            )
+            Song(
+                id = remote.path.hashCode(),
+                title = remote.title,
+                artist = remote.artist,
+
+                duration = durationFormatted,
+                durationMs = durationMs,
+                filePath = remote.path,
+                albumArtUri = null
             )
         }
     }
