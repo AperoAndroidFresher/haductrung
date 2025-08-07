@@ -1,4 +1,4 @@
-package com.example.haductrung.database.DAO
+package com.example.haductrung.database.dao
 
 
 import androidx.room.Dao
@@ -27,7 +27,7 @@ interface PlaylistDao {
         WHERE playlistId = :id 
         LIMIT 1
     """)
-    suspend fun findPlaylistById(id: Int): PlaylistEntity?
+    fun findPlaylistById(id: Int): Flow<PlaylistEntity?>
     //lấy playlist by userid
     @Query("""
         SELECT * 

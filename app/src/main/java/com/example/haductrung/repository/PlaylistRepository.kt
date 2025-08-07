@@ -1,6 +1,6 @@
 package com.example.haductrung.repository
 
-import com.example.haductrung.database.DAO.PlaylistDao
+import com.example.haductrung.database.dao.PlaylistDao
 import com.example.haductrung.database.entity.PlaylistEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -18,7 +18,7 @@ class PlaylistRepository(private val playlistDao: PlaylistDao) {
     suspend fun deletePlaylist(playlist: PlaylistEntity){
         playlistDao.delete(playlist)
     }
-    suspend fun findPlaylistById(id: Int): PlaylistEntity? {
+    suspend fun findPlaylistById(id: Int): Flow<PlaylistEntity?> {
         return playlistDao.findPlaylistById(id)
     }
 }

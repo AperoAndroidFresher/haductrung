@@ -1,4 +1,4 @@
-package com.example.haductrung.database.DAO
+package com.example.haductrung.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert

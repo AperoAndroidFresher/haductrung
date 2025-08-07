@@ -15,10 +15,8 @@ data class PlaylistDetailState(
 
 
 sealed interface PlaylistDetailIntent {
-    data class LoadPlaylistDetails(val playlistId: String) : PlaylistDetailIntent
-
     data object OnToggleViewClick : PlaylistDetailIntent
-    data object OnToggleSortClick : PlaylistDetailIntent
+   // data object OnToggleSortClick : PlaylistDetailIntent
 
     data class OnMoreClick(val song: Song) : PlaylistDetailIntent
     data object OnDismissMenu : PlaylistDetailIntent

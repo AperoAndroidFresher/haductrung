@@ -106,7 +106,7 @@ class PlaylistViewModel(private val playlistRepository: PlaylistRepository) : Vi
                 }
                 _state.update { it.copy(playlistToRename = null) }
             }
-            else -> {}
+
         }
     }
 }

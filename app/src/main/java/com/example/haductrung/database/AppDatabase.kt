@@ -5,9 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.haductrung.database.DAO.PlaylistDao
-import com.example.haductrung.database.DAO.SongDao
-import com.example.haductrung.database.DAO.UserDao
+import com.example.haductrung.database.dao.PlaylistDao
+import com.example.haductrung.database.dao.SongDao
+import com.example.haductrung.database.dao.UserDao
 import com.example.haductrung.database.entity.PlaylistEntity
 import com.example.haductrung.database.entity.SongEntity
 import com.example.haductrung.database.entity.UserEntity
