@@ -186,6 +186,14 @@ fun LibraryScreen(
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             menuContent = {
+                                                CustomMenuItem(
+                                                    text = "Add to playlist",
+                                                    iconResId = R.drawable.addplaylist,
+                                                    onClick = {
+                                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song))
+                                                        onIntent(LibraryIntent.OnDismissMenu)
+                                                    }
+                                                )
                                             }
                                         )
                                     }
@@ -201,6 +209,14 @@ fun LibraryScreen(
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
                                             menuContent = {
 
+                                                CustomMenuItem(
+                                                    text = "Add to playlist",
+                                                    iconResId = R.drawable.addplaylist,
+                                                    onClick = {
+                                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song))
+                                                        onIntent(LibraryIntent.OnDismissMenu)
+                                                    }
+                                                )
                                             }
                                         )
                                     }

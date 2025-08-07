@@ -95,8 +95,6 @@ class PlaylistDetailViewModel(
             _state.update { it.copy(songWithMenu = null) }
         }
     }
-
-    //  đổi từ Entity sang model
     @SuppressLint("DefaultLocale")
     private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
         return entities.map { entity ->
