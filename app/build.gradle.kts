@@ -61,6 +61,10 @@ dependencies {
     implementation(libs.jbcrypt)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+
     //noinspection KaptUsageInsteadOfKsp
     kapt(libs.androidx.room.compiler)
     testImplementation(libs.junit)

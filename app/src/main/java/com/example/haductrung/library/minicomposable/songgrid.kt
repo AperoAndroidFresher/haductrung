@@ -53,7 +53,7 @@ fun SongGridItem(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(song.albumArtUri)
                     .crossfade(true)
-                    .fallback(R.drawable.grainydays) // khi uri null
+                    .fallback(R.drawable.grainydays)
                     .error(R.drawable.cofee)
                     .build(),
                 contentDescription = song.title,

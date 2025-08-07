@@ -8,6 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,24 +21,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.haductrung.R
 import com.example.haductrung.library.minicomposable.CustomMenuItem
+import com.example.haductrung.library.minicomposable.LibraryTabs
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
+import com.example.haductrung.library.remote.RemoteSong
+import com.example.haductrung.repository.Song
 
 
 @Composable
 fun LibraryScreen(
     state: LibraryState,
-    onIntent:(LibraryIntent)->Unit,
+    onIntent: (LibraryIntent) -> Unit,
 ) {
 //    val activity = (LocalActivity.current)
 //    BackHandler {
 //        activity?.finish()
 //    }
-    if(state.hasPermission) {
+    if (state.hasPermission) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -46,7 +58,7 @@ fun LibraryScreen(
                     .padding(vertical = 8.dp)
             ) {
                 Text(
-                    "My Playlist",
+                    "Library",
                     color = Color.White,
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -80,82 +92,193 @@ fun LibraryScreen(
                     )
                 }
             }
-            if (state.isGridView) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(state.songList.size) { index ->
-                        val song1 = state.songList[index]
-                        SongGridItem(
-                            song = song1,
-                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
-                            isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
-                            menuContent = {
+            LibraryTabs(
+                selectedTab = state.selectedTab,
+                onTabSelected = { selectedTab ->
+                    onIntent(LibraryIntent.OnTabSelected(selectedTab))
+                }
+            )
+            when (state.selectedTab) {
+                LibraryTab.LOCAL -> {
+                    if (state.isGridView) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(state.songList.size) { index ->
+                                val song1 = state.songList[index]
+                                SongGridItem(
+                                    song = song1,
+                                    onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
+                                    isMenuExpanded = (state.songWithMenu == song1.id),
+                                    onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
+                                    menuContent = {
 
-                                CustomMenuItem(
-                                    text = "Add to playlist",
-                                    iconResId = R.drawable.addplaylist,
-                                    onClick = {
-                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
-                                        onIntent(LibraryIntent.OnDismissMenu)
+                                        CustomMenuItem(
+                                            text = "Add to playlist",
+                                            iconResId = R.drawable.addplaylist,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
+                                                onIntent(LibraryIntent.OnDismissMenu)
+                                            }
+                                        )
+                                        CustomMenuItem(
+                                            text = "Share",
+                                            iconResId = R.drawable.share,
+                                            onClick = { onIntent(LibraryIntent.OnDismissMenu) }
+                                        )
                                     }
                                 )
-                                CustomMenuItem(
-                                    text = "Share",
-                                    iconResId = R.drawable.share,
-                                    onClick = { onIntent(LibraryIntent.OnDismissMenu) }
+                            }
+                        }
+                    } else {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(state.songList.size) { index ->
+                                val song1 = state.songList[index]
+                                SongItem(
+                                    song = song1,
+                                    onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
+                                    isMenuExpanded = (state.songWithMenu == song1.id),
+                                    onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
+                                    isSortMode = state.isSortMode,
+                                    menuContent = {
+                                        CustomMenuItem(
+                                            text = "Add to playlist",
+                                            iconResId = R.drawable.addplaylist,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
+                                                onIntent(LibraryIntent.OnDismissMenu)
+                                            }
+                                        )
+                                        CustomMenuItem(
+                                            text = "Share",
+                                            iconResId = R.drawable.share,
+                                            onClick = { onIntent(LibraryIntent.OnDismissMenu) }
+                                        )
+                                    }
                                 )
                             }
-                        )
+                        }
                     }
                 }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.songList.size) { index ->
-                        val song1 = state.songList[index]
-                        SongItem(
-                            song = song1,
-                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
-                            isMenuExpanded = (state.songWithMenu == song1.id),
-                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
-                            isSortMode = state.isSortMode,
-                            menuContent = {
-                                CustomMenuItem(
-                                    text = "Add to playlist",
-                                    iconResId = R.drawable.addplaylist,
-                                    onClick = {
-                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
-                                        onIntent(LibraryIntent.OnDismissMenu)
-                                    }
-                                )
-                                CustomMenuItem(
-                                    text = "Share",
-                                    iconResId = R.drawable.share,
-                                    onClick = { onIntent(LibraryIntent.OnDismissMenu) }
-                                )
+
+                LibraryTab.REMOTE -> {
+                    when (val remoteState = state.remoteState) {
+                        is RemoteState.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
-                        )
+                        }
+
+                        is RemoteState.Success -> {
+                            if (state.isGridView) {
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(remoteState.songs) { song ->
+                                        SongGridItem(
+                                            song = song,
+                                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
+                                            isMenuExpanded = (state.songWithMenu == song.id),
+                                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
+                                            menuContent = {
+                                            }
+                                        )
+                                    }
+                                }
+                            } else {
+                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    items(remoteState.songs) { song ->
+                                        SongItem(
+                                            song = song,
+                                            isSortMode = false,
+                                            isMenuExpanded = (state.songWithMenu == song.id),
+                                            onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
+                                            onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
+                                            menuContent = {
+
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        is RemoteState.Error -> {
+                            ErrorView(onIntent = onIntent)
+                        }
                     }
                 }
             }
         }
-    }else{
+    } else {
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black),
             contentAlignment = Alignment.Center
         ) {
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onIntent(LibraryIntent.OnRequestPermissionAgain) }
-                ) {
-                    Text("Please grant access permission in settings", color = Color.White)
-                }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.clickable { onIntent(LibraryIntent.OnRequestPermissionAgain) }
+            ) {
+                Text("Please grant access permission in settings", color = Color.White)
+            }
 
         }
     }
+}
+@Composable
+private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(top = 80.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_no_internet),
+            contentDescription = "No Internet",
+            modifier = Modifier.size(150.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "No internet connection,\nplease check your\n connection again",
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = { onIntent(LibraryIntent.RetryFetchRemoteSongs) },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C2CB)),
+            shape = RoundedCornerShape(16)
+        ) {
+            Text(text = "Try again", color = Color.White)
+        }
+    }
+}
+
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun LibraryScreenWithTabsPreview() {
+    val sampleSongs = listOf(
+        Song(1, "Blinding Lights", "The Weeknd", "3:20", 200000, "", null),
+        Song(2, "As It Was", "Harry Styles", "2:47", 167000, "", null)
+    )
+
+    LibraryScreen(
+        state = LibraryState(
+            hasPermission = true,
+            songList = sampleSongs,
+            selectedTab = LibraryTab.REMOTE,
+             remoteState = RemoteState.Error("đ")
+        ),
+        onIntent = {}
+    )
 }
 
 
