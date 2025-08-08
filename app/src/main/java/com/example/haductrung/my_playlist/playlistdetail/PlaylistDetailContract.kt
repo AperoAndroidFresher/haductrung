@@ -10,14 +10,15 @@ data class PlaylistDetailState(
     val isGridView: Boolean = false,
     val isSortMode: Boolean = false,
     val songWithMenu: Int? = null,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val selectedSongId: Int? = null
 )
 
 
 sealed interface PlaylistDetailIntent {
     data object OnToggleViewClick : PlaylistDetailIntent
    // data object OnToggleSortClick : PlaylistDetailIntent
-
+    data class OnSongSelected(val songId: Int) : PlaylistDetailIntent
     data class OnMoreClick(val song: Song) : PlaylistDetailIntent
     data object OnDismissMenu : PlaylistDetailIntent
 
