@@ -1,4 +1,4 @@
-package com.example.haductrung.database.DAO
+package com.example.haductrung.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -11,12 +11,22 @@ interface SongDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(songs: List<SongEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(song: SongEntity): Long
     @Query("""
         SELECT * 
         FROM songs 
         ORDER BY title ASC
     """)
     fun getAllSongs(): Flow<List<SongEntity>>
+
+    @Query("""
+        SELECT * 
+        FROM songs 
+        WHERE filePath = :filePath 
+        LIMIT 1
+    """)
+    suspend fun findByFilePath(filePath: String): SongEntity?
 
 
     @Query("""

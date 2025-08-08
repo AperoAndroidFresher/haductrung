@@ -12,31 +12,29 @@ import com.example.haductrung.database.entity.SongEntity
 import com.example.haductrung.repository.Song
 import com.example.haductrung.repository.PlaylistRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class PlaylistDetailViewModel(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val playlistRepository: PlaylistRepository,
     private val songRepository: SongRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(PlaylistDetailState())
+    private val _state = MutableStateFlow(PlaylistDetailState(isLoading = true))
     val state = _state.asStateFlow()
 
     init {
         val playlistId: String? = savedStateHandle["playlistId"]
-        if (playlistId != null) {
-            processIntent(PlaylistDetailIntent.LoadPlaylistDetails(playlistId))
+        playlistId?.toIntOrNull()?.let { id ->
+            observePlaylistDetails(id)
         }
     }
 
     fun processIntent(intent: PlaylistDetailIntent) {
         when (intent) {
-            is PlaylistDetailIntent.LoadPlaylistDetails -> {
-                loadPlaylistAndSongs(intent.playlistId)
-            }
             is PlaylistDetailIntent.OnToggleViewClick -> {
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
@@ -51,52 +49,43 @@ class PlaylistDetailViewModel(
                     removeSongFromPlaylist(intent.song)
                 }
             }
-            else -> {}
         }
     }
 
-    private fun loadPlaylistAndSongs(playlistId: String) {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observePlaylistDetails(playlistId: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            val playlistIdInt = playlistId.toIntOrNull() ?: 0
-
-            // Lấy thông tin playlist
-            val playlistEntity = playlistRepository.findPlaylistById(playlistIdInt)
-            if (playlistEntity != null) {
-                _state.update { it.copy(playlist = playlistEntity) }
-
-                // Dùng converter để lấy danh sách ID
-                val songIds = Converters().fromString(playlistEntity.songIdsJson)
-                songRepository.getSongsByIds(songIds).collect { songEntities ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            songs = mapEntitiesToSongs(songEntities)
-                        )
-                    }
+            playlistRepository.findPlaylistById(playlistId)
+                .filterNotNull()
+                .flatMapLatest { playlistEntity ->
+                    _state.update { it.copy(playlist = playlistEntity) }
+                    val songIds = Converters().fromString(playlistEntity.songIdsJson)
+                    songRepository.getSongsByIds(songIds)
                 }
-            } else {
-                _state.update { it.copy(isLoading = false) }
-            }
+                .map { songEntities ->
+                    mapEntitiesToSongs(songEntities)
+                }
+                .collect { songs ->
+                    _state.update { it.copy(isLoading = false, songs = songs) }
+                }
         }
     }
 
     private suspend fun removeSongFromPlaylist(songToRemove: Song) {
-        val currentPlaylist = state.value.playlist
-        if (currentPlaylist != null) {
+        state.value.playlist?.let { currentPlaylist ->
             val converters = Converters()
-            val currentSongIds = converters.fromString(currentPlaylist.songIdsJson).toMutableList()
-            currentSongIds.remove(songToRemove.id)
-            val updatedSongIdsJson = converters.fromIntList(currentSongIds)
+            val updatedSongIds = converters.fromString(currentPlaylist.songIdsJson)
+                .filter { it != songToRemove.id }
 
-            val updatedPlaylist = currentPlaylist.copy(songIdsJson = updatedSongIdsJson)
+            val updatedPlaylist = currentPlaylist.copy(
+                songIdsJson = converters.fromIntList(updatedSongIds)
+            )
+
             playlistRepository.updatePlaylist(updatedPlaylist)
-
             _state.update { it.copy(songWithMenu = null) }
         }
     }
 
-    //  đổi từ Entity sang model
     @SuppressLint("DefaultLocale")
     private fun mapEntitiesToSongs(entities: List<SongEntity>): List<Song> {
         return entities.map { entity ->

@@ -12,7 +12,6 @@ data class PlaylistState(
 )
 sealed interface PlaylistIntent {
     data object OnToggleViewClick : PlaylistIntent
-    data object OnToggleSortClick : PlaylistIntent
     data class OnMoreClick(val playlist: PlaylistEntity) : PlaylistIntent
     data object OnDismissMenu : PlaylistIntent
     data object OnCreatePlaylistClick : PlaylistIntent

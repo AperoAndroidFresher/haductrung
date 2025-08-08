@@ -25,13 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.haductrung.R
 import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.LibraryTabs
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
-import com.example.haductrung.library.remote.RemoteSong
 import com.example.haductrung.repository.Song
 
 
@@ -186,6 +184,14 @@ fun LibraryScreen(
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             menuContent = {
+                                                CustomMenuItem(
+                                                    text = "Add to playlist",
+                                                    iconResId = R.drawable.addplaylist,
+                                                    onClick = {
+                                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song))
+                                                        onIntent(LibraryIntent.OnDismissMenu)
+                                                    }
+                                                )
                                             }
                                         )
                                     }
@@ -201,6 +207,14 @@ fun LibraryScreen(
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
                                             menuContent = {
 
+                                                CustomMenuItem(
+                                                    text = "Add to playlist",
+                                                    iconResId = R.drawable.addplaylist,
+                                                    onClick = {
+                                                        onIntent(LibraryIntent.OnAddToPlaylistClick(song))
+                                                        onIntent(LibraryIntent.OnDismissMenu)
+                                                    }
+                                                )
                                             }
                                         )
                                     }

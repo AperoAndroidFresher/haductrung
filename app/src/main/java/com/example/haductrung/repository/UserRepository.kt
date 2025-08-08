@@ -1,6 +1,6 @@
 package com.example.haductrung.repository
 
-import com.example.haductrung.database.DAO.UserDao
+import com.example.haductrung.database.dao.UserDao
 import com.example.haductrung.database.entity.UserEntity
 
 class UserRepository (private val userDao: UserDao){

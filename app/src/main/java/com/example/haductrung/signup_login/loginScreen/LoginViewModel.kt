@@ -83,7 +83,7 @@ class LoginViewModel(
             val encoder = BCryptPasswordEncoder()
             if (encoder.matches(currentState.password, userFromDb.passwordHash)) {
                 // correct pass
-                SessionManager.login(userFromDb.userId)
+                SessionManager.login(userFromDb.userId, remember = currentState.isChecked)
                 _event.emit(LoginEvent.NavigateToHome)
             } else {
                 // incorrect pass

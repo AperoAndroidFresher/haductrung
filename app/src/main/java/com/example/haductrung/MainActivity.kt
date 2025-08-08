@@ -59,6 +59,7 @@ import kotlinx.serialization.Serializable
 import com.example.haductrung.database.AppDatabase
 import com.example.haductrung.repository.SongRepository
 import com.example.haductrung.repository.UserRepository
+import com.example.haductrung.signup_login.SessionManager
 
 
 @Serializable
@@ -93,6 +94,7 @@ data class PlaylistDetail(val playlistId: String)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SessionManager.init(this)
         setContent {
             HaductrungTheme {
                 Surface(
@@ -109,9 +111,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val startDestination = if (SessionManager.getLoggedInUserId() != null) {
+        Home
+    } else {
+        Welcome
+    }
     NavHost(
         navController = navController,
-        startDestination = Welcome,
+        startDestination = startDestination,
     ) {
         composable<Welcome> {
             WelcomeScreen(
