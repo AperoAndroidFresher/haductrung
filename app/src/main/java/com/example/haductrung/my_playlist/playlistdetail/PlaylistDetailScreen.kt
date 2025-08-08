@@ -28,13 +28,15 @@ import com.example.haductrung.repository.Song
 import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
-
+import com.example.haductrung.musicPlayerManager.PlayerUiIntent
+import com.example.haductrung.playback.PlayerManager
 
 
 @Composable
 fun PlaylistDetailScreen(
     state: PlaylistDetailState,
-    onIntent: (PlaylistDetailIntent) -> Unit
+    onIntent: (PlaylistDetailIntent) -> Unit,
+    onPlaySong: (Song) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -57,13 +59,22 @@ fun PlaylistDetailScreen(
             }
         } else {
             if (state.isGridView) {
-                LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize()) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 90.dp)
+                ) {
                     items(
                         items = state.songs,
-                        key = { song -> song.id }
-                    ) { song ->
+                        key = { song -> song.id }) { song ->
+                        val isSelected = song.id == state.selectedSongId
                         SongGridItem (
                             song = song,
+                            isSelected = isSelected,
+                            onClick = {
+                                onIntent(PlaylistDetailIntent.OnSongSelected(song.id))
+                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                            },
                             onMoreClick = { onIntent(PlaylistDetailIntent.OnMoreClick(song)) },
                             isMenuExpanded = state.songWithMenu == song.id,
                             onDismissMenu = { onIntent(PlaylistDetailIntent.OnDismissMenu) },
@@ -89,13 +100,21 @@ fun PlaylistDetailScreen(
                     }
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 90.dp)
+                ) {
                     items(
                         items = state.songs,
-                        key = { song -> song.id }
-                    ) { song ->
+                        key = { song -> song.id }) { song ->
+                        val isSelected = song.id == state.selectedSongId
                         SongItem(
                             song = song,
+                            isSelected = isSelected,
+                            onClick = {
+                                onIntent(PlaylistDetailIntent.OnSongSelected(song.id))
+                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                            },
                             isMenuExpanded = state.songWithMenu == song.id,
                             onDismissMenu = { onIntent(PlaylistDetailIntent.OnDismissMenu) },
                             onMoreClick = { onIntent(PlaylistDetailIntent.OnMoreClick(song)) },
@@ -176,7 +195,8 @@ private val samplePlaylistForPreview = PlaylistEntity(
 private fun PlaylistDetailScreenLoadingPreview() {
     PlaylistDetailScreen(
         state = PlaylistDetailState(isLoading = true),
-        onIntent = {}
+        onIntent = {},
+        onPlaySong = {}
     )
 }
 @Preview(name = "Empty State", showBackground = true, backgroundColor = 0xFF000000)
@@ -188,7 +208,8 @@ private fun PlaylistDetailScreenEmptyPreview() {
             playlist = samplePlaylistForPreview,
             songs = emptyList()
         ),
-        onIntent = {}
+        onIntent = {},
+        onPlaySong = {}
     )
 }
 
@@ -202,7 +223,8 @@ private fun PlaylistDetailScreenLoadedListPreview() {
             playlist = samplePlaylistForPreview,
             songs = sampleSongsForPreview
         ),
-        onIntent = {}
+        onIntent = {},
+        onPlaySong = {}
     )
 }
 
@@ -217,7 +239,8 @@ private fun PlaylistDetailScreenLoadedGridPreview() {
             songs = sampleSongsForPreview,
             isGridView = true
         ),
-        onIntent = {}
+        onIntent = {},
+        onPlaySong = {}
     )
 }
 @Preview(name = "Screen With Menu Open", showBackground = true, backgroundColor = 0xFF000000)
@@ -242,6 +265,7 @@ private fun PlaylistDetailScreenWithMenuPreview() {
             songs = sampleSongs,
             songWithMenu = sampleSongs.first().id
         ),
-        onIntent = {}
+        onIntent = {},
+        onPlaySong = {}
     )
 }

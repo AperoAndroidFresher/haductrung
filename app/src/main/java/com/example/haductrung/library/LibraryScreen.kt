@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.haductrung.R
@@ -30,6 +29,8 @@ import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.LibraryTabs
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
+import com.example.haductrung.musicPlayerManager.PlayerUiIntent
+import com.example.haductrung.playback.PlayerManager
 import com.example.haductrung.repository.Song
 
 
@@ -37,6 +38,7 @@ import com.example.haductrung.repository.Song
 fun LibraryScreen(
     state: LibraryState,
     onIntent: (LibraryIntent) -> Unit,
+    onPlaySong: (Song) -> Unit
 ) {
 //    val activity = (LocalActivity.current)
 //    BackHandler {
@@ -105,8 +107,14 @@ fun LibraryScreen(
                         ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
+                                val isSelected = song1.id == state.selectedSongId
                                 SongGridItem(
                                     song = song1,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        onIntent(LibraryIntent.OnSongSelected(song1.id))
+                                        PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song1))
+                                    },
                                     onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                                     isMenuExpanded = (state.songWithMenu == song1.id),
                                     onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
@@ -130,11 +138,20 @@ fun LibraryScreen(
                             }
                         }
                     } else {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 90.dp)
+                        ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
+                                val isSelected = song1.id == state.selectedSongId
                                 SongItem(
                                     song = song1,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        onIntent(LibraryIntent.OnSongSelected(song1.id))
+                                        PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song1))
+                                    },
                                     onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                                     isMenuExpanded = (state.songWithMenu == song1.id),
                                     onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
@@ -175,11 +192,18 @@ fun LibraryScreen(
                             if (state.isGridView) {
                                 LazyVerticalGrid(
                                     columns = GridCells.Fixed(2),
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 90.dp)
                                 ) {
                                     items(remoteState.songs) { song ->
+                                        val isSelected = song.id == state.selectedSongId
                                         SongGridItem(
                                             song = song,
+                                            isSelected = isSelected,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnSongSelected(song.id))
+                                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                            },
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
@@ -199,9 +223,15 @@ fun LibraryScreen(
                             } else {
                                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                                     items(remoteState.songs) { song ->
+                                        val isSelected = song.id == state.selectedSongId
                                         SongItem(
                                             song = song,
                                             isSortMode = false,
+                                            isSelected = isSelected,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnSongSelected(song.id))
+                                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                            },
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
@@ -276,23 +306,6 @@ private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
 }
 
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun LibraryScreenWithTabsPreview() {
-    val sampleSongs = listOf(
-        Song(1, "Blinding Lights", "The Weeknd", "3:20", 200000, "", null),
-        Song(2, "As It Was", "Harry Styles", "2:47", 167000, "", null)
-    )
 
-    LibraryScreen(
-        state = LibraryState(
-            hasPermission = true,
-            songList = sampleSongs,
-            selectedTab = LibraryTab.REMOTE,
-             remoteState = RemoteState.Error("đ")
-        ),
-        onIntent = {}
-    )
-}
 
 

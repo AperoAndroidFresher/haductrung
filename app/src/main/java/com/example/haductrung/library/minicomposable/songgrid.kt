@@ -38,14 +38,19 @@ import com.example.haductrung.repository.Song
 @Composable
 fun SongGridItem(
     song: Song,
-    onMoreClick: () -> Unit,
     isMenuExpanded: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     onDismissMenu: () -> Unit,
-
+    onMoreClick: () -> Unit,
     menuContent: @Composable ColumnScope.() -> Unit
     ) {
+    val backgroundColor = if (isSelected) Color.DarkGray else Color.Black
     Column(
-        modifier = Modifier.padding(8.dp),
+        modifier = Modifier
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {

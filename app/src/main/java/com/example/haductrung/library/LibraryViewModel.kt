@@ -55,7 +55,10 @@ class LibraryViewModel(
             is LibraryIntent.RetryFetchRemoteSongs -> fetchRemoteSongs()
             is LibraryIntent.OnToggleViewClick -> _state.update { it.copy(isGridView = !it.isGridView) }
             is LibraryIntent.OnToggleSortClick -> _state.update { it.copy(isSortMode = !it.isSortMode) }
-            is LibraryIntent.OnMoreClick -> _state.update { it.copy(songWithMenu = intent.song.id) }
+            is LibraryIntent.OnMoreClick -> _state.update { it.copy(
+                songWithMenu = intent.song.id,
+                selectedSongId = intent.song.id
+            ) }
             is LibraryIntent.OnDismissMenu -> _state.update { it.copy(songWithMenu = null) }
             is LibraryIntent.CheckAndLoadSongs -> checkPermissionAndLoad()
             is LibraryIntent.OnRequestPermissionAgain -> viewModelScope.launch {
@@ -66,6 +69,9 @@ class LibraryViewModel(
 
             is LibraryIntent.OnAddToPlaylistClick -> {
                 addSongToLibraryAndNavigate(intent.song)
+            }
+            is LibraryIntent.OnSongSelected -> {
+                _state.update { it.copy(selectedSongId = intent.songId) }
             }
         }
     }

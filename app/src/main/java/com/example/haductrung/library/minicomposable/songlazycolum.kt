@@ -37,15 +37,20 @@ import com.example.haductrung.repository.Song
 fun SongItem(
     song: Song,
     isMenuExpanded: Boolean,
+    isSortMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     onDismissMenu: () -> Unit,
     onMoreClick: () -> Unit,
-    isSortMode: Boolean,
     menuContent: @Composable ColumnScope.() -> Unit
 
 ) {
+    val backgroundColor = if (isSelected) Color.DarkGray else Color.Black
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(backgroundColor)
+            .clickable { onClick() }
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

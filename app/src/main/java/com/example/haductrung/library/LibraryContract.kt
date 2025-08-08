@@ -17,6 +17,7 @@ data class LibraryState(
     val songWithMenu: Int?=null,
     val hasPermission: Boolean = false,
 
+    val selectedSongId: Int? = null,
     val selectedTab: LibraryTab = LibraryTab.LOCAL,
     val remoteState: RemoteState = RemoteState.Loading
 )
@@ -28,6 +29,7 @@ sealed interface LibraryIntent {
     data object OnDismissMenu :LibraryIntent
     data class OnAddToPlaylistClick(val song: Song) : LibraryIntent
     //data class OnDeleteClick(val song: Song) :LibraryIntent
+    data class OnSongSelected(val songId: Int) : LibraryIntent
     data object CheckAndLoadSongs : LibraryIntent
     data object OnRequestPermissionAgain: LibraryIntent
 
