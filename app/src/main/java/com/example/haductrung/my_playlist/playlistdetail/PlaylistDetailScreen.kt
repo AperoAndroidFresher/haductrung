@@ -28,7 +28,7 @@ import com.example.haductrung.repository.Song
 import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
-import com.example.haductrung.musicPlayerManager.PlayerUiIntent
+import com.example.haductrung.musicPlayerBar.PlayerUiIntent
 import com.example.haductrung.playback.PlayerManager
 
 
@@ -36,7 +36,7 @@ import com.example.haductrung.playback.PlayerManager
 fun PlaylistDetailScreen(
     state: PlaylistDetailState,
     onIntent: (PlaylistDetailIntent) -> Unit,
-    onPlaySong: (Song) -> Unit
+    onPlaySong: (song: Song, playlist: List<Song>) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,7 +73,7 @@ fun PlaylistDetailScreen(
                             isSelected = isSelected,
                             onClick = {
                                 onIntent(PlaylistDetailIntent.OnSongSelected(song.id))
-                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                onPlaySong(song, state.songs)
                             },
                             onMoreClick = { onIntent(PlaylistDetailIntent.OnMoreClick(song)) },
                             isMenuExpanded = state.songWithMenu == song.id,
@@ -113,7 +113,7 @@ fun PlaylistDetailScreen(
                             isSelected = isSelected,
                             onClick = {
                                 onIntent(PlaylistDetailIntent.OnSongSelected(song.id))
-                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                onPlaySong(song, state.songs)
                             },
                             isMenuExpanded = state.songWithMenu == song.id,
                             onDismissMenu = { onIntent(PlaylistDetailIntent.OnDismissMenu) },
@@ -175,97 +175,4 @@ private fun PlaylistDetailTopBar(
                 .clickable { onIntent(PlaylistDetailIntent.OnToggleViewClick) }
         )
     }
-}
-//Preview
-private val sampleSongsForPreview = listOf(
-    Song(1, "Blinding Lights", "The Weeknd", "3:20", 200000, "", null),
-    Song(2, "As It Was", "Harry Styles", "2:47", 167000, "", null),
-    Song(3, "Levitating", "Dua Lipa", "3:23", 203000, "", null)
-)
-
-private val samplePlaylistForPreview = PlaylistEntity(
-    playlistId = 1,
-    name = "My Awesome Playlist",
-    creatorUserId = 1,
-    songIdsJson = "[1,2,3]"
-)
-
-@Preview(name = "Loading State", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PlaylistDetailScreenLoadingPreview() {
-    PlaylistDetailScreen(
-        state = PlaylistDetailState(isLoading = true),
-        onIntent = {},
-        onPlaySong = {}
-    )
-}
-@Preview(name = "Empty State", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PlaylistDetailScreenEmptyPreview() {
-    PlaylistDetailScreen(
-        state = PlaylistDetailState(
-            isLoading = false,
-            playlist = samplePlaylistForPreview,
-            songs = emptyList()
-        ),
-        onIntent = {},
-        onPlaySong = {}
-    )
-}
-
-// Preview cho dạng danh sách
-@Preview(name = "Loaded - List View", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PlaylistDetailScreenLoadedListPreview() {
-    PlaylistDetailScreen(
-        state = PlaylistDetailState(
-            isLoading = false,
-            playlist = samplePlaylistForPreview,
-            songs = sampleSongsForPreview
-        ),
-        onIntent = {},
-        onPlaySong = {}
-    )
-}
-
-// Preview cho dạng lưới
-@Preview(name = "Loaded - Grid View", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PlaylistDetailScreenLoadedGridPreview() {
-    PlaylistDetailScreen(
-        state = PlaylistDetailState(
-            isLoading = false,
-            playlist = samplePlaylistForPreview,
-            songs = sampleSongsForPreview,
-            isGridView = true
-        ),
-        onIntent = {},
-        onPlaySong = {}
-    )
-}
-@Preview(name = "Screen With Menu Open", showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun PlaylistDetailScreenWithMenuPreview() {
-
-    val sampleSongs = listOf(
-        Song(1, "Blinding Lights", "The Weeknd", "3:20", 200000, "", null),
-        Song(2, "As It Was", "Harry Styles", "2:47", 167000, "", null)
-    )
-    val samplePlaylist = PlaylistEntity(
-        playlistId = 1,
-        name = "My Awesome Playlist",
-        creatorUserId = 1,
-        songIdsJson = "[1,2]"
-    )
-
-    PlaylistDetailScreen(
-        state = PlaylistDetailState(
-            isLoading = false,
-            playlist = samplePlaylist,
-            songs = sampleSongs,
-            songWithMenu = sampleSongs.first().id
-        ),
-        onIntent = {},
-        onPlaySong = {}
-    )
 }

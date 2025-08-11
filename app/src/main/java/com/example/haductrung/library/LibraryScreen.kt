@@ -29,7 +29,7 @@ import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.LibraryTabs
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
-import com.example.haductrung.musicPlayerManager.PlayerUiIntent
+import com.example.haductrung.musicPlayerBar.PlayerUiIntent
 import com.example.haductrung.playback.PlayerManager
 import com.example.haductrung.repository.Song
 

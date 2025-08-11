@@ -12,14 +12,9 @@ import androidx.navigation.compose.dialog
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,10 +61,11 @@ import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
 import com.example.haductrung.database.AppDatabase
 import com.example.haductrung.home.BottomHomeBar
-import com.example.haductrung.musicPlayerManager.BottomPlayerScreen
-import com.example.haductrung.musicPlayerManager.PlayerUiIntent
-import com.example.haductrung.musicPlayerManager.PlayerUiState
-import com.example.haductrung.musicPlayerManager.PlayerViewModel
+import com.example.haductrung.musicPlayerBar.BottomPlayerScreen
+import com.example.haductrung.musicPlayerBar.PlayerDetailScreen
+import com.example.haductrung.musicPlayerBar.PlayerUiIntent
+import com.example.haductrung.musicPlayerBar.PlayerUiState
+import com.example.haductrung.musicPlayerBar.PlayerViewModel
 import com.example.haductrung.playback.PlayerManager
 import com.example.haductrung.playback.PlayerViewModelFactory
 import com.example.haductrung.repository.SongRepository
@@ -291,7 +287,7 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                     state = state,
                     onIntent = viewModelPL::processIntent,
                     onPlaySong = { song ->
-                        playerViewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                        playerViewModel.processIntent(PlayerUiIntent.PlaySong(song, null))
                     }
                 )
             }
@@ -387,8 +383,8 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                 PlaylistDetailScreen(
                     state = state,
                     onIntent = viewModelDetail::processIntent,
-                    onPlaySong = { song ->
-                        playerViewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                    onPlaySong = { song, playlist ->
+                        playerViewModel.processIntent(PlayerUiIntent.PlaySong(song, playlist))
                     }
                 )
             }
@@ -441,19 +437,26 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                 )
             }
         }
-        Column(
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            if (showPlayer) {
-                BottomPlayerScreen(
-                    state = playerState,
-                    onIntent = playerViewModel::processIntent
-                )
-            }
-            if (showBottomNav) {
-                BottomHomeBar(
-                    navController = navController,
-                )
+        if (playerState.isDetailScreenVisible) {
+            PlayerDetailScreen(
+                state = playerState,
+                onIntent = playerViewModel::processIntent
+            )
+        } else {
+            Column(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                if (showPlayer) {
+                    BottomPlayerScreen(
+                        state = playerState,
+                        onIntent = playerViewModel::processIntent
+                    )
+                }
+                if (showBottomNav) {
+                    BottomHomeBar(
+                        navController = navController,
+                    )
+                }
             }
         }
     }
