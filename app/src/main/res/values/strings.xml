@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">haductrung</string>
+    <string name="prev_desc">Previous</string>
+    <string name="play_pause_desc">Play/Pause</string>
+    <string name="next_desc">Next</string>
+    <string name="close_desc">Close</string>
 </resources>

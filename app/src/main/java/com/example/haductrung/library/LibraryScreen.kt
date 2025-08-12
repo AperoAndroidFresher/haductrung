@@ -103,7 +103,8 @@ fun LibraryScreen(
                     if (state.isGridView) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 100.dp)
                         ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
@@ -140,7 +141,7 @@ fun LibraryScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 90.dp)
+                            contentPadding = PaddingValues(bottom = 100.dp)
                         ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
@@ -193,7 +194,7 @@ fun LibraryScreen(
                                 LazyVerticalGrid(
                                     columns = GridCells.Fixed(2),
                                     modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(bottom = 90.dp)
+                                    contentPadding = PaddingValues(bottom = 100.dp)
                                 ) {
                                     items(remoteState.songs) { song ->
                                         val isSelected = song.id == state.selectedSongId
@@ -221,7 +222,10 @@ fun LibraryScreen(
                                     }
                                 }
                             } else {
-                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 100.dp)
+                                ) {
                                     items(remoteState.songs) { song ->
                                         val isSelected = song.id == state.selectedSongId
                                         SongItem(

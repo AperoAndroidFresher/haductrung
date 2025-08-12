@@ -8,6 +8,8 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.haductrung.Home
+import com.example.haductrung.home.Home
 import com.example.haductrung.playback.MusicPlaybackService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,13 +35,31 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             musicBinder = service as MusicPlaybackService.MusicBinder
             isServiceBound = true
-
-            // Lấy service instance và bắt đầu lắng nghe tiến trình
             val musicService = musicBinder?.getService()
+
+            val serviceState = musicBinder?.getCurrentPlayerState()
+            val currentVmState = state.value
+
+            if (currentVmState.currentPlayingSong == null && serviceState?.song != null) {
+                val restoredSong = serviceState.song
+                val restoredPlaylist = serviceState.playlist
+                val restoredIndex = restoredPlaylist?.indexOf(restoredSong) ?: -1
+
+                _state.update {
+                    it.copy(
+                        currentPlayingSong = restoredSong,
+                        currentPlaylist = restoredPlaylist,
+                        currentSongIndex = restoredIndex,
+                        isPlaying = true
+                    )
+                }
+            }
+            else {
+                musicBinder?.updateNowPlayingInfo(currentVmState.currentPlayingSong, currentVmState.currentPlaylist)
+            }
 
             serviceJob = viewModelScope.launch {
                 musicService?.playbackState?.collect { playbackState ->
-                    // Cập nhật state của ViewModel với dữ liệu từ service
                     _state.update { currentState ->
                         currentState.copy(
                             currentPosition = playbackState.currentPosition,
@@ -52,7 +72,6 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                 }
             }
         }
-
         override fun onServiceDisconnected(name: ComponentName?) {
             isServiceBound = false
             musicBinder = null
@@ -86,12 +105,12 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                         currentSongIndex = newIndex
                     )
                 }
-
+                val isPersistent = intent.playlist != null
                 val serviceIntent = Intent(application, MusicPlaybackService::class.java).apply {
                     putExtra("SONG_TITLE", intent.song.title)
                     putExtra("SONG_FILE_PATH", intent.song.filePath)
+                    putExtra("IS_PERSISTENT", isPersistent)
                 }
-
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     application.startForegroundService(serviceIntent)
                 } else {
@@ -128,24 +147,73 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                 val currentState = state.value
                 val currentPlaylist = currentState.currentPlaylist
                 if (!currentPlaylist.isNullOrEmpty()) {
-                    val nextIndex = (currentState.currentSongIndex + 1) % currentPlaylist.size
+                    val nextIndex = if (currentState.isLoopingEnabled) {
+                        (currentState.currentSongIndex + 1) % currentPlaylist.size
+                    } else {
+
+                        if (currentState.currentSongIndex < currentPlaylist.size - 1) {
+                            currentState.currentSongIndex + 1
+                        } else {
+                            return
+                        }
+                    }
                     val nextSong = currentPlaylist[nextIndex]
                     processIntent(PlayerUiIntent.PlaySong(nextSong, currentPlaylist))
                 }
             }
-
             is PlayerUiIntent.SkipToPrevious -> {
                 val currentState = state.value
                 val currentPlaylist = currentState.currentPlaylist
                 if (!currentPlaylist.isNullOrEmpty()) {
-                    val previousIndex = (currentState.currentSongIndex - 1 + currentPlaylist.size) % currentPlaylist.size
+                    val previousIndex = if (currentState.isLoopingEnabled) {
+                        (currentState.currentSongIndex - 1 + currentPlaylist.size) % currentPlaylist.size
+                    } else {
+                        if (currentState.currentSongIndex > 0) {
+                            currentState.currentSongIndex - 1
+                        } else {
+                            return
+                        }
+                    }
                     val previousSong = currentPlaylist[previousIndex]
                     processIntent(PlayerUiIntent.PlaySong(previousSong, currentPlaylist))
                 }
             }
-//            is PlayerUiIntent.Seek -> {
-//                musicBinder?.seekTo(intent.positionMs)
-//            }
+            is PlayerUiIntent.Seek -> {
+                val totalDuration = state.value.totalDuration
+                if (totalDuration > 0) {
+                    val seekToMs = (totalDuration * intent.position).toLong()
+                    musicBinder?.seekTo(seekToMs)
+                }
+            }
+            is PlayerUiIntent.ScreenChanged -> {
+                val currentState = state.value
+                val isPlayingFromLibrary = currentState.currentPlayingSong != null && currentState.currentPlaylist == null
+                if (intent.route == Home::class.qualifiedName && isPlayingFromLibrary) {
+                    processIntent(PlayerUiIntent.DismissPlayer)
+                }
+            }
+            is PlayerUiIntent.AppEnteredBackground -> {
+                val currentState = state.value
+                val isPlayingFromLibrary = currentState.currentPlayingSong != null && currentState.currentPlaylist == null
+
+                if (isPlayingFromLibrary) {
+                    processIntent(PlayerUiIntent.DismissPlayer)
+                }
+            }
+            is PlayerUiIntent.ToggleShuffle -> {
+                _state.update { it.copy(isShuffleEnabled = !it.isShuffleEnabled) }
+            }
+            is PlayerUiIntent.ToggleLoopMode -> {
+                val newLoopingState = !state.value.isLoopingEnabled
+                _state.update { it.copy(isLoopingEnabled = newLoopingState) }
+                musicBinder?.setLooping(newLoopingState)
+            }
+        }
+    }
+    fun checkAndRestoreState() {
+        if (!isServiceBound) {
+            val serviceIntent = Intent(application, MusicPlaybackService::class.java)
+            application.bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
         }
     }
     override fun onCleared() {

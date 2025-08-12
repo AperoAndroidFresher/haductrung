@@ -1,18 +1,17 @@
 package com.example.haductrung.musicPlayerBar
 
 import android.annotation.SuppressLint
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +41,8 @@ fun PlayerDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val currentSong = state.currentPlayingSong ?: return
+    var isSeeking by remember { mutableStateOf(false) }
+    var sliderPosition by remember { mutableStateOf(0f) }
 
     @SuppressLint("DefaultLocale")
     fun formatDuration(ms: Long): String {
@@ -128,25 +129,31 @@ fun PlayerDetailScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
         Slider(
-            value = state.progress,
-            onValueChange = {},
+            value = if (isSeeking) sliderPosition else state.progress,
+            onValueChange = {
+                isSeeking = true
+                sliderPosition = it
+            },
+            onValueChangeFinished = {
+                onIntent(PlayerUiIntent.Seek(sliderPosition))
+                isSeeking = false
+            },
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
-                thumbColor = Color.White,
                 activeTrackColor = Color(0xFF00C2CB),
-                inactiveTrackColor = Color.Gray
+                inactiveTrackColor = Color.Gray,
+                thumbColor = Color.Transparent
             ),
             thumb = {
                 Box(
                     modifier = Modifier
                         .size(18.dp)
-                        .background(
-                            color = Color(0xFF00C2CB),
-                            shape = CircleShape
-                        )
+                        .background(Color(0xFF00C2CB), CircleShape)
+                        .border(0.dp, Color.Transparent, CircleShape)
                 )
             }
         )
+
 
         Row(
             modifier = Modifier
@@ -154,7 +161,16 @@ fun PlayerDetailScreen(
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = formatDuration(state.currentPosition), color = Color.LightGray)
+            Text(
+                text = formatDuration(
+                    if (isSeeking) {
+                        (sliderPosition * state.totalDuration).toLong()
+                    } else {
+                        state.currentPosition
+                    }
+                ),
+                color = Color.LightGray
+            )
             Text(text = formatDuration(state.totalDuration), color = Color.LightGray)
         }
 
@@ -169,15 +185,21 @@ fun PlayerDetailScreen(
             Image(
                 painter = painterResource(id = R.drawable.tron_2),
                 contentDescription = "Shuffle",
-                modifier = Modifier.size(28.dp).clickable { /* TODO */ },
+                modifier = Modifier.size(28.dp).clickable {  },
                 colorFilter = ColorFilter.tint(Color.White)
             )
-
+            val isPreviousEnabled = state.isLoopingEnabled || state.currentSongIndex > 0
             // SỬA LẠI: Dùng Image
             Image(
                 painter = painterResource(id = R.drawable.previous),
                 contentDescription = "Previous",
-                modifier = Modifier.size(30.dp).clickable {onIntent(PlayerUiIntent.SkipToPrevious)},
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(enabled = isPreviousEnabled) {
+                        onIntent(PlayerUiIntent.SkipToPrevious)
+                    },
+                // Làm mờ icon nếu bị vô hiệu hóa
+                alpha = if (isPreviousEnabled) 1f else 0.5f,
                 colorFilter = ColorFilter.tint(Color.White)
             )
 
@@ -199,17 +221,27 @@ fun PlayerDetailScreen(
                     colorFilter = ColorFilter.tint(Color.White)
                 )
             }
+            val isNextEnabled = state.isLoopingEnabled || state.currentSongIndex < (state.currentPlaylist?.size ?: 0) - 1
             Image(
                 painter = painterResource(id = R.drawable.next),
                 contentDescription = "Next",
-                modifier = Modifier.size(30.dp).clickable {onIntent(PlayerUiIntent.SkipToNext) },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable(enabled = isNextEnabled) {
+                        onIntent(PlayerUiIntent.SkipToNext)
+                    },
+                alpha = if (isNextEnabled) 1f else 0.5f,
                 colorFilter = ColorFilter.tint(Color.White)
             )
             Image(
                 painter = painterResource(id = R.drawable.tuantu),
                 contentDescription = "Loop",
-                modifier = Modifier.size(28.dp).clickable { /* TODO */ },
-                colorFilter = ColorFilter.tint(Color.White)
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onIntent(PlayerUiIntent.ToggleLoopMode) },
+                colorFilter = ColorFilter.tint(
+                    if (state.isLoopingEnabled) Color(0xFF00C2CB) else Color.White
+                )
             )
         }
     }

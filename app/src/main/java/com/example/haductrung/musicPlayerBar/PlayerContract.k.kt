@@ -6,6 +6,10 @@ data class PlaybackState(
     val currentPosition: Long = 0L,
     val totalDuration: Long = 0L
 )
+data class CurrentPlayerState(
+    val song: Song?,
+    val playlist: List<Song>?
+)
 data class PlayerUiState(
     val currentPlayingSong: Song? = null,
     val currentPlaylist: List<Song>? = null,
@@ -14,17 +18,24 @@ data class PlayerUiState(
     val currentPosition: Long = 0L,
     val totalDuration: Long = 0L,
     val progress: Float = 0f,
-    val isDetailScreenVisible: Boolean = false
+    val isDetailScreenVisible: Boolean = false,
+    val isShuffleEnabled: Boolean = false,
+    val isLoopingEnabled: Boolean = false,
+    val playHistory: List<Song> = emptyList()
 )
 sealed interface PlayerUiIntent {
     data class PlaySong(val song: Song, val playlist: List<Song>? = null) : PlayerUiIntent
     data object TogglePlayPause : PlayerUiIntent
     data object DismissPlayer : PlayerUiIntent
-//    data class Seek(val positionMs: Long) : PlayerUiIntent // kéo slider
-    data object SkipToNext : PlayerUiIntent // next
-    data object SkipToPrevious : PlayerUiIntent // previous
+    data class Seek(val position: Float) : PlayerUiIntent
+    data object SkipToNext : PlayerUiIntent
+    data object SkipToPrevious : PlayerUiIntent
     data object OpenPlayerDetail : PlayerUiIntent
     data object BackFromPlayerDetail : PlayerUiIntent
+    data class ScreenChanged(val route: String?) : PlayerUiIntent
+    data object AppEnteredBackground : PlayerUiIntent
+    data object ToggleShuffle : PlayerUiIntent
+    data object ToggleLoopMode : PlayerUiIntent
 }
 sealed interface PlayerUiEvent {
 }

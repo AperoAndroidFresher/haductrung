@@ -110,12 +110,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         SessionManager.init(this)
         PlayerManager.viewModel = playerViewModel
+        playerViewModel.checkAndRestoreState()
         setContent {
             HaductrungTheme {
                     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
                     AppNavigation(playerViewModel = playerViewModel, playerState = playerState)
             }
         }
+    }
+    override fun onStop() {
+        super.onStop()
+        playerViewModel.processIntent(PlayerUiIntent.AppEnteredBackground)
     }
 }
 
@@ -136,6 +141,9 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBottomNav = screensWithBottomNav.any { currentRoute?.startsWith(it) == true }
     val showPlayer = currentRoute !in screensWithoutPlayer && playerState.currentPlayingSong != null
+    LaunchedEffect(currentRoute) {
+        playerViewModel.processIntent(PlayerUiIntent.ScreenChanged(currentRoute))
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
