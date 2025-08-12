@@ -57,7 +57,11 @@ fun PlayerDetailScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(16.dp),
+            .padding(16.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {},
 
         ) {
         // --- Top Bar ---

@@ -9,8 +9,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 
 import android.media.MediaPlayer
+import android.net.Uri
 
 import android.os.Binder
 
@@ -30,6 +33,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleService
 
 import androidx.lifecycle.lifecycleScope
+import com.example.haductrung.MainActivity
 
 import com.example.haductrung.musicPlayerBar.CurrentPlayerState
 
@@ -61,6 +65,8 @@ class MusicPlaybackService : LifecycleService() {
 
     private val _playbackState = MutableStateFlow(PlaybackState())
     val playbackState: StateFlow<PlaybackState> = _playbackState
+    private val _currentSongFlow = MutableStateFlow<Song?>(null)
+    val currentSongFlow: StateFlow<Song?> = _currentSongFlow
     private var currentSong: Song? = null
 
     private var currentPlaylist: List<Song>? = null
@@ -154,6 +160,7 @@ class MusicPlaybackService : LifecycleService() {
     private fun startPlaying(song: Song, playlist: List<Song>?) {
         this.currentSong = song
         this.currentPlaylist = playlist
+        _currentSongFlow.value = song
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification())
         startPlayingWithFilePath(song.filePath)
@@ -169,6 +176,9 @@ class MusicPlaybackService : LifecycleService() {
                     mp.start()
                     _isPlayingState.value = true
                     startProgressUpdates()
+
+                    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.notify(NOTIFICATION_ID, createNotification())
                 }
                 setOnCompletionListener { mp ->
                     stopProgressUpdates()
@@ -195,6 +205,8 @@ class MusicPlaybackService : LifecycleService() {
                         }
                     } else {
                         _isPlayingState.value = false
+                        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                        notificationManager.notify(NOTIFICATION_ID, createNotification())
                     }
                 }
             }
@@ -245,7 +257,19 @@ class MusicPlaybackService : LifecycleService() {
             stopSelf()
         }
     }
-
+    private fun getAlbumArtBitmap(albumArtUri: Uri?): Bitmap? {
+        if (albumArtUri == null) {
+            return null
+        }
+        return try {
+            contentResolver.openFileDescriptor(albumArtUri, "r")?.use { pfd ->
+                BitmapFactory.decodeFileDescriptor(pfd.fileDescriptor)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
     private fun createNotification(): Notification {
         val channelId = "music_playback_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -260,6 +284,8 @@ class MusicPlaybackService : LifecycleService() {
         val songTitle = currentSong?.title ?: "Unknown Title"
         val songArtist = currentSong?.artist ?: "Unknown Artist"
         val isPlaying = mediaPlayer?.isPlaying ?: false
+        val albumArtUri = currentSong?.albumArtUri
+
 
         // Tạo RemoteViews từ layout tùy chỉnh
         val notificationLayout = RemoteViews(packageName, R.layout.custom_notification)
@@ -286,18 +312,37 @@ class MusicPlaybackService : LifecycleService() {
             R.id.btn_play_pause,
             if (isPlaying) R.drawable.pause else R.drawable.play
         )
+        // --- Bổ sung code hiển thị ảnh bìa vào đây ---
+        val albumArtBitmap = getAlbumArtBitmap(albumArtUri)
+        if (albumArtBitmap != null) {
+            // Gán ảnh cho ảnh bìa nhỏ
+            notificationLayout.setImageViewBitmap(R.id.album_art_small, albumArtBitmap)
+        } else {
+            // Sử dụng ảnh mặc định nếu không lấy được ảnh bìa
+            notificationLayout.setImageViewResource(R.id.album_art_small, R.drawable.grainydays)
+        }
+        // --- Kết thúc phần bổ sung ---
+
+        // Hiển thị icon Play/Pause đúng với trạng thái hiện tại
+        notificationLayout.setImageViewResource(
+            R.id.btn_play_pause,
+            if (isPlaying) R.drawable.pause else R.drawable.play
+        )
 
         // Tạo các Intent và PendingIntent cho các nút điều khiển
         val prevIntent = Intent("ACTION_PREVIOUS").setPackage(packageName)
         val playPauseIntent = Intent("ACTION_PLAY_PAUSE").setPackage(packageName)
         val nextIntent = Intent("ACTION_NEXT").setPackage(packageName)
         val closeIntent = Intent("ACTION_CLOSE").setPackage(packageName)
+        val openAppIntent = Intent(this, MainActivity::class.java).apply {
+            action = "ACTION_OPEN_PLAYER_DETAIL"
+        }
 
         val prevPendingIntent = PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_IMMUTABLE)
         val playPausePendingIntent = PendingIntent.getBroadcast(this, 1, playPauseIntent, PendingIntent.FLAG_IMMUTABLE)
         val nextPendingIntent = PendingIntent.getBroadcast(this, 2, nextIntent, PendingIntent.FLAG_IMMUTABLE)
         val closePendingIntent = PendingIntent.getBroadcast(this, 3, closeIntent, PendingIntent.FLAG_IMMUTABLE)
-
+        val openAppPendingIntent = PendingIntent.getActivity(this, 0, openAppIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         // Gán PendingIntent cho các nút trong RemoteViews
         notificationLayout.setOnClickPendingIntent(R.id.btn_prev, prevPendingIntent)
         notificationLayout.setOnClickPendingIntent(R.id.btn_play_pause, playPausePendingIntent)
@@ -306,6 +351,7 @@ class MusicPlaybackService : LifecycleService() {
 
         // Xây dựng Notification với layout tùy chỉnh
         return NotificationCompat.Builder(this, channelId)
+            .setContentIntent(openAppPendingIntent)
             .setSmallIcon(R.drawable.play)
             .setCustomContentView(notificationLayout)
             .setOngoing(true)

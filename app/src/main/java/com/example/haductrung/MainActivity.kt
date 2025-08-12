@@ -2,6 +2,7 @@ package com.example.haductrung
 
 import android.Manifest
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.navigation.compose.dialog
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -106,11 +109,17 @@ class MainActivity : ComponentActivity() {
     private val playerViewModel: PlayerViewModel by viewModels {
         PlayerViewModelFactory(application)
     }
+    private fun handleIntent(intent: Intent) {
+        if (intent?.action == "ACTION_OPEN_PLAYER_DETAIL") {
+            playerViewModel.processIntent(PlayerUiIntent.OpenPlayerDetail)
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SessionManager.init(this)
         PlayerManager.viewModel = playerViewModel
         playerViewModel.checkAndRestoreState()
+        handleIntent(intent)
         setContent {
             HaductrungTheme {
                     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
@@ -118,10 +127,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
     override fun onStop() {
         super.onStop()
         playerViewModel.processIntent(PlayerUiIntent.AppEnteredBackground)
     }
+
 }
 
 @Composable
@@ -445,12 +460,8 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                 )
             }
         }
-        if (playerState.isDetailScreenVisible) {
-            PlayerDetailScreen(
-                state = playerState,
-                onIntent = playerViewModel::processIntent
-            )
-        } else {
+        Box(modifier = Modifier.fillMaxSize(),) {
+            // Phần hiển thị các thanh điều hướng dưới cùng
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
@@ -465,6 +476,12 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                         navController = navController,
                     )
                 }
+            }
+            if (playerState.isDetailScreenVisible) {
+                PlayerDetailScreen(
+                    state = playerState,
+                    onIntent = playerViewModel::processIntent,
+                )
             }
         }
     }
