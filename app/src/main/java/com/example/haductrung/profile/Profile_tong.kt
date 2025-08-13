@@ -160,7 +160,14 @@ fun ProfileScreen(
                 PrimaryButton(
                     text = "SUBMIT",
                     onClick = {onIntent(ProfileIntent.OnSubmitClick)},
-                    modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp)
+                    modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp),
+                )
+            }else {
+                PrimaryButton(
+                    text = "LOGOUT",
+                    onClick = { onIntent(ProfileIntent.OnLogoutClick) },
+                    modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp),
+                    textColor = Color.Red
                 )
             }
         }

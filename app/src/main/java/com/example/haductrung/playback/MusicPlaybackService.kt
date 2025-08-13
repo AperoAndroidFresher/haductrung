@@ -69,17 +69,18 @@ class MusicPlaybackService : LifecycleService() {
     val currentSongFlow: StateFlow<Song?> = _currentSongFlow
     private val _isPlayingState = MutableStateFlow(false)
     val isPlayingState: StateFlow<Boolean> = _isPlayingState
+    private var isShuffleEnabled = false
+    private val _isShuffleEnabledState = MutableStateFlow(false)
+    val isShuffleEnabledState: StateFlow<Boolean> = _isShuffleEnabledState
+    private var shuffledPlaylist: List<Song>? = null
+    private var shuffledIndex: Int = -1
 
     private var currentSong: Song? = null
     private var currentPlaylist: List<Song>? = null
     //private val _songCompletion = MutableSharedFlow<Unit>()
-
    // val songCompletion = _songCompletion.asSharedFlow()
-
     private var isPersistent = false
-
     private var isLoopingEnabled = false
-
     private var progressJob: Job? = null
 
     fun seekTo(positionMs: Long) {
@@ -90,14 +91,89 @@ class MusicPlaybackService : LifecycleService() {
             )
         }
     }
-
     fun updateNowPlayingInfo(song: Song?, playlist: List<Song>?) {
         this.currentSong = song
         this.currentPlaylist = playlist
     }
-
     fun setLooping(isLooping: Boolean) {
         this.isLoopingEnabled = isLooping
+    }
+    fun toggleShuffle() {
+        val newState = !isShuffleEnabled
+        isShuffleEnabled = newState
+        _isShuffleEnabledState.value = newState
+
+        if (newState) {
+            setLooping(false)
+            shuffledPlaylist = currentPlaylist?.shuffled()
+            shuffledIndex = 0
+            currentSong = shuffledPlaylist?.get(shuffledIndex)
+            currentSong?.let {
+                startPlaying(it, currentPlaylist)
+            }
+        } else {
+            shuffledPlaylist = null
+            shuffledIndex = -1
+        }
+    }
+    fun playNext() {
+        val listToPlay = if (isShuffleEnabled) shuffledPlaylist else currentPlaylist
+        if (listToPlay.isNullOrEmpty()) return
+
+        val currentIndex = if (isShuffleEnabled) {
+            shuffledIndex
+        } else {
+            listToPlay.indexOf(currentSong)
+        }
+
+        if (currentIndex != -1) {
+            val nextIndex = if (isLoopingEnabled || isShuffleEnabled) {
+                (currentIndex + 1) % listToPlay.size
+            } else {
+                if (currentIndex < listToPlay.size - 1) {
+                    currentIndex + 1
+                } else {
+                    return
+                }
+            }
+            val nextSong = listToPlay[nextIndex]
+            if (isShuffleEnabled) {
+                shuffledIndex = nextIndex
+                startPlaying(nextSong, currentPlaylist)
+            } else {
+                startPlaying(nextSong, currentPlaylist)
+            }
+        }
+    }
+
+    fun playPrevious() {
+        val listToPlay = if (isShuffleEnabled) shuffledPlaylist else currentPlaylist
+        if (listToPlay.isNullOrEmpty()) return
+
+        val currentIndex = if (isShuffleEnabled) {
+            shuffledIndex
+        } else {
+            listToPlay.indexOf(currentSong)
+        }
+
+        if (currentIndex != -1) {
+            val prevIndex = if (isLoopingEnabled || isShuffleEnabled) {
+                (currentIndex - 1 + listToPlay.size) % listToPlay.size
+            } else {
+                if (currentIndex > 0) {
+                    currentIndex - 1
+                } else {
+                    return
+                }
+            }
+            val previousSong = listToPlay[prevIndex]
+            if (isShuffleEnabled) {
+                shuffledIndex = prevIndex
+                startPlaying(previousSong, currentPlaylist)
+            } else {
+                startPlaying(previousSong, currentPlaylist)
+            }
+        }
     }
 
     inner class MusicBinder : Binder() {
@@ -105,22 +181,27 @@ class MusicPlaybackService : LifecycleService() {
         fun togglePlayPause() {
             this@MusicPlaybackService.togglePlayPause()
         }
-
         fun seekTo(positionMs: Long) {
             this@MusicPlaybackService.seekTo(positionMs)
         }
-
         fun updateNowPlayingInfo(song: Song?, playlist: List<Song>?) {
             this@MusicPlaybackService.updateNowPlayingInfo(song, playlist)
         }
+        fun playNext() {
+            this@MusicPlaybackService.playNext()
+        }
 
+        fun playPrevious() {
+            this@MusicPlaybackService.playPrevious()
+        }
         fun getCurrentPlayerState(): CurrentPlayerState {
 
             return CurrentPlayerState(
 
                 song = this@MusicPlaybackService.currentSong,
                 isLoopingEnabled = this@MusicPlaybackService.isLoopingEnabled,
-                playlist = this@MusicPlaybackService.currentPlaylist
+                playlist = this@MusicPlaybackService.currentPlaylist,
+                isShuffleEnabled = this@MusicPlaybackService.isShuffleEnabled
             )
         }
         private val _isLoopingEnabledState = MutableStateFlow(false)
@@ -128,6 +209,9 @@ class MusicPlaybackService : LifecycleService() {
         fun setLooping(isLooping: Boolean) {
             this@MusicPlaybackService.setLooping(isLooping)
             _isLoopingEnabledState.value = isLooping
+        }
+        fun toggleShuffle() {
+            this@MusicPlaybackService.toggleShuffle()
         }
     }
 
@@ -155,7 +239,6 @@ class MusicPlaybackService : LifecycleService() {
         mediaPlayer?.release()
         mediaPlayer = null
     }
-
     private fun startPlaying(song: Song, playlist: List<Song>?) {
         this.currentSong = song
         this.currentPlaylist = playlist
@@ -164,7 +247,6 @@ class MusicPlaybackService : LifecycleService() {
         notificationManager.notify(NOTIFICATION_ID, createNotification())
         startPlayingWithFilePath(song.filePath)
     }
-
     private fun startPlayingWithFilePath(filePath: String) {
         try {
             mediaPlayer?.release()
@@ -185,21 +267,24 @@ class MusicPlaybackService : LifecycleService() {
                         currentPosition = mp.duration.toLong(),
                         totalDuration = mp.duration.toLong()
                     )
-                    val currentPlaylist = this@MusicPlaybackService.currentPlaylist
-                    if (!currentPlaylist.isNullOrEmpty()) {
-                        val currentIndex =
-                            currentPlaylist.indexOf(this@MusicPlaybackService.currentSong)
+
+                    // SỬA: Sử dụng listToPlay để quyết định bài tiếp theo
+                    val listToPlay = if (isShuffleEnabled) shuffledPlaylist else currentPlaylist
+
+                    if (!listToPlay.isNullOrEmpty()) {
+                        val currentIndex = listToPlay.indexOf(this@MusicPlaybackService.currentSong)
                         if (currentIndex != -1) {
-                            val isLastSongAndNotLooping =
-                                (currentIndex == currentPlaylist.size - 1) && !isLoopingEnabled
-                            if (isLastSongAndNotLooping) {
+                            val isLastSong = currentIndex == listToPlay.size - 1
+                            val shouldPlayNext = isLoopingEnabled || isShuffleEnabled || !isLastSong
+
+                            if (shouldPlayNext) {
+                                val nextIndex = (currentIndex + 1) % listToPlay.size
+                                val nextSong = listToPlay[nextIndex]
+                                startPlaying(nextSong, currentPlaylist)
+                            } else {
                                 _isPlayingState.value = false
                                 val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                                notificationManager.notify(NOTIFICATION_ID, createNotification()) // Cập nhật notification
-                            } else {
-                                val nextIndex = (currentIndex + 1) % currentPlaylist.size
-                                val nextSong = currentPlaylist[nextIndex]
-                                startPlaying(nextSong, currentPlaylist)
+                                notificationManager.notify(NOTIFICATION_ID, createNotification())
                             }
                         }
                     } else {

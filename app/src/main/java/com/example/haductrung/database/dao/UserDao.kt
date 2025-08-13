@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.haductrung.database.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao{
@@ -24,5 +25,5 @@ interface UserDao{
         FROM users 
         WHERE userId = :userId LIMIT 1
     """)
-    suspend fun findUserById(userId: Int): UserEntity?
+     fun findUserById(userId: Int): Flow<UserEntity?>
 }

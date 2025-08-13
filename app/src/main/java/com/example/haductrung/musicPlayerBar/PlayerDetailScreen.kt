@@ -43,6 +43,10 @@ fun PlayerDetailScreen(
     val currentSong = state.currentPlayingSong ?: return
     var isSeeking by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(0f) }
+    val isNextEnabled = state.isLoopingEnabled || state.isShuffleEnabled ||
+            state.currentSongIndex < (state.currentPlaylist?.size ?: 0) - 1
+    val isPreviousEnabled = state.isLoopingEnabled || state.isShuffleEnabled ||
+            state.currentSongIndex > 0
 
     @SuppressLint("DefaultLocale")
     fun formatDuration(ms: Long): String {
@@ -189,11 +193,13 @@ fun PlayerDetailScreen(
             Image(
                 painter = painterResource(id = R.drawable.tron_2),
                 contentDescription = "Shuffle",
-                modifier = Modifier.size(28.dp).clickable {  },
-                colorFilter = ColorFilter.tint(Color.White)
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { onIntent(PlayerUiIntent.ToggleShuffle) },
+                colorFilter = ColorFilter.tint(
+                    if (state.isShuffleEnabled) Color(0xFF00C2CB) else Color.White
+                )
             )
-            val isPreviousEnabled = state.isLoopingEnabled || state.currentSongIndex > 0
-            // SỬA LẠI: Dùng Image
             Image(
                 painter = painterResource(id = R.drawable.previous),
                 contentDescription = "Previous",
@@ -202,12 +208,8 @@ fun PlayerDetailScreen(
                     .clickable(enabled = isPreviousEnabled) {
                         onIntent(PlayerUiIntent.SkipToPrevious)
                     },
-                // Làm mờ icon nếu bị vô hiệu hóa
-                alpha = if (isPreviousEnabled) 1f else 0.5f,
                 colorFilter = ColorFilter.tint(Color.White)
             )
-
-            // SỬA LẠI: Dùng Box và Image cho nút Play/Pause để giữ nền tròn
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -225,7 +227,7 @@ fun PlayerDetailScreen(
                     colorFilter = ColorFilter.tint(Color.White)
                 )
             }
-            val isNextEnabled = state.isLoopingEnabled || state.currentSongIndex < (state.currentPlaylist?.size ?: 0) - 1
+           // val isNextEnabled = state.isLoopingEnabled || state.currentSongIndex < (state.currentPlaylist?.size ?: 0) - 1
             Image(
                 painter = painterResource(id = R.drawable.next),
                 contentDescription = "Next",
@@ -243,6 +245,7 @@ fun PlayerDetailScreen(
                 modifier = Modifier
                     .size(28.dp)
                     .clickable { onIntent(PlayerUiIntent.ToggleLoopMode) },
+                alpha = if (state.isShuffleEnabled) 0.5f else 1f,
                 colorFilter = ColorFilter.tint(
                     if (state.isLoopingEnabled) Color(0xFF00C2CB) else Color.White
                 )

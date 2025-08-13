@@ -15,7 +15,8 @@ import androidx.compose.ui.unit.dp
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White
 ) {
     Button(
         onClick = onClick,
@@ -27,7 +28,7 @@ fun PrimaryButton(
     ) {
         Text(
             text,
-            color = Color.White,
+            color = textColor,
             modifier = Modifier.padding(vertical = 8.dp)
         )
     }

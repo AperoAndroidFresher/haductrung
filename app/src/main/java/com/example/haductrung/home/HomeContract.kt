@@ -1,7 +1,11 @@
 package com.example.haductrung.home
 
+import android.net.Uri
+
 data class HomeState(
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val imageUri: Uri? = null,
+    val username: String = ""
 )
 
 

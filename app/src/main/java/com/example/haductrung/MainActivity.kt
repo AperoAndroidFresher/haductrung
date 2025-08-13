@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -63,7 +64,7 @@ import com.example.haductrung.signup_login.minicomposale.WelcomeScreen
 import com.example.haductrung.ui.theme.HaductrungTheme
 import kotlinx.serialization.Serializable
 import com.example.haductrung.database.AppDatabase
-import com.example.haductrung.home.BottomHomeBar
+import com.example.haductrung.home.bottomHomeBar.BottomHomeBar
 import com.example.haductrung.musicPlayerBar.BottomPlayerScreen
 import com.example.haductrung.musicPlayerBar.PlayerDetailScreen
 import com.example.haductrung.musicPlayerBar.PlayerUiIntent
@@ -110,7 +111,7 @@ class MainActivity : ComponentActivity() {
         PlayerViewModelFactory(application)
     }
     private fun handleIntent(intent: Intent) {
-        if (intent?.action == "ACTION_OPEN_PLAYER_DETAIL") {
+        if (intent.action == "ACTION_OPEN_PLAYER_DETAIL") {
             playerViewModel.processIntent(PlayerUiIntent.OpenPlayerDetail)
         }
     }
@@ -174,7 +175,6 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                     }
                 )
             }
-
             composable<Login> { backStackEntry ->
                 val database = AppDatabase.getDatabase(LocalContext.current)
                 val userDao = database.userDAO()
@@ -239,8 +239,24 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
             }
 
             composable<Home> {
-                val viewModelh: HomeViewModel = viewModel()
-
+                val database = AppDatabase.getDatabase(LocalContext.current)
+                val userDao = database.userDAO()
+                val userRepository = UserRepository(userDao)
+                val context = LocalContext.current
+                val viewModelh: HomeViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+                                return HomeViewModel(
+                                    userRepository = userRepository,
+                                    application = context.applicationContext as Application as MyApplication
+                                ) as T
+                            }
+                            throw IllegalArgumentException("Unknown ViewModel class")
+                        }
+                    }
+                )
                 val state by viewModelh.state.collectAsStateWithLifecycle()
                 LaunchedEffect(Unit) {
                     viewModelh.event.collect { event ->
@@ -254,7 +270,7 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
 
                 Home(
                     state = state,
-                    onIntent = viewModelh::processIntent
+                    onIntent = viewModelh::processIntent,
                 )
             }
             composable<Library> {
@@ -448,7 +464,13 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                             }
 
                             is ProfileEvent.ShowSuccessPopup -> {
-
+                            }
+                            is ProfileEvent.NavigateToLogin -> {
+                                navController.navigate(Login) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                }
                             }
                         }
                     }
@@ -461,7 +483,6 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
             }
         }
         Box(modifier = Modifier.fillMaxSize(),) {
-            // Phần hiển thị các thanh điều hướng dưới cùng
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {

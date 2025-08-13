@@ -25,6 +25,12 @@ object SessionManager {
             }
         }
     }
+    fun logout() {
+        _currentUserId.value = null
+        sharedPreferences?.edit {
+            remove(KEY_USER_ID)
+        }
+    }
      fun getLoggedInUserId(): Int? {
         val userId = sharedPreferences?.getInt(KEY_USER_ID, -1) ?: -1
         return if (userId != -1) userId else null

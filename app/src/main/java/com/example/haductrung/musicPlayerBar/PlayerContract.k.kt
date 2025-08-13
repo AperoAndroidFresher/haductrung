@@ -9,7 +9,8 @@ data class PlaybackState(
 data class CurrentPlayerState(
     val song: Song?,
     val playlist: List<Song>?,
-    val isLoopingEnabled: Boolean
+    val isLoopingEnabled: Boolean,
+    val isShuffleEnabled: Boolean
 )
 data class PlayerUiState(
     val currentPlayingSong: Song? = null,

@@ -2,6 +2,7 @@ package com.example.haductrung.repository
 
 import com.example.haductrung.database.dao.UserDao
 import com.example.haductrung.database.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 
 class UserRepository (private val userDao: UserDao){
     suspend fun findUserByUsername(username:String):UserEntity?{
@@ -14,7 +15,7 @@ class UserRepository (private val userDao: UserDao){
         userDao.updateUser(user
         )
     }
-    suspend fun findUserById(userId: Int): UserEntity? {
+     fun findUserById(userId: Int): Flow<UserEntity?>? {
         return userDao.findUserById(userId)
     }
 }

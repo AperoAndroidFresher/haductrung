@@ -99,6 +99,13 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                         }
                     }
                 }
+                launch {
+                    musicService?.isShuffleEnabledState?.collect { isShuffleEnabled ->
+                        _state.update { currentState ->
+                            currentState.copy(isShuffleEnabled = isShuffleEnabled)
+                        }
+                    }
+                }
             }
         }
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -115,7 +122,6 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                     processIntent(PlayerUiIntent.TogglePlayPause)
                     return
                 }
-
                 if (isServiceBound) {
                     try {
                         application.unbindService(connection)
@@ -172,41 +178,11 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
             is PlayerUiIntent.BackFromPlayerDetail -> {
                 _state.update { it.copy(isDetailScreenVisible = false) }
             }
-
             is PlayerUiIntent.SkipToNext -> {
-                val currentState = state.value
-                val currentPlaylist = currentState.currentPlaylist
-                if (!currentPlaylist.isNullOrEmpty()) {
-                    val nextIndex = if (currentState.isLoopingEnabled) {
-                        (currentState.currentSongIndex + 1) % currentPlaylist.size
-                    } else {
-
-                        if (currentState.currentSongIndex < currentPlaylist.size - 1) {
-                            currentState.currentSongIndex + 1
-                        } else {
-                            return
-                        }
-                    }
-                    val nextSong = currentPlaylist[nextIndex]
-                    processIntent(PlayerUiIntent.PlaySong(nextSong, currentPlaylist))
-                }
+                musicBinder?.playNext()
             }
             is PlayerUiIntent.SkipToPrevious -> {
-                val currentState = state.value
-                val currentPlaylist = currentState.currentPlaylist
-                if (!currentPlaylist.isNullOrEmpty()) {
-                    val previousIndex = if (currentState.isLoopingEnabled) {
-                        (currentState.currentSongIndex - 1 + currentPlaylist.size) % currentPlaylist.size
-                    } else {
-                        if (currentState.currentSongIndex > 0) {
-                            currentState.currentSongIndex - 1
-                        } else {
-                            return
-                        }
-                    }
-                    val previousSong = currentPlaylist[previousIndex]
-                    processIntent(PlayerUiIntent.PlaySong(previousSong, currentPlaylist))
-                }
+                musicBinder?.playPrevious()
             }
             is PlayerUiIntent.Seek -> {
                 val totalDuration = state.value.totalDuration
@@ -231,12 +207,24 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                 }
             }
             is PlayerUiIntent.ToggleShuffle -> {
-                _state.update { it.copy(isShuffleEnabled = !it.isShuffleEnabled) }
+                val newState = !state.value.isShuffleEnabled
+                _state.update {
+                    it.copy(
+                        isShuffleEnabled = newState,
+                        isLoopingEnabled = false
+                    )
+                }
+                musicBinder?.toggleShuffle()
             }
             is PlayerUiIntent.ToggleLoopMode -> {
-                val newLoopingState = !state.value.isLoopingEnabled
-                _state.update { it.copy(isLoopingEnabled = newLoopingState) }
-                musicBinder?.setLooping(newLoopingState)
+                val newState = !state.value.isLoopingEnabled
+                _state.update {
+                    it.copy(
+                        isLoopingEnabled = newState,
+                        isShuffleEnabled = false
+                    )
+                }
+                musicBinder?.setLooping(newState)
             }
         }
     }
