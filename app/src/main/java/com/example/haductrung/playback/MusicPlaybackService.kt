@@ -67,14 +67,11 @@ class MusicPlaybackService : LifecycleService() {
     val playbackState: StateFlow<PlaybackState> = _playbackState
     private val _currentSongFlow = MutableStateFlow<Song?>(null)
     val currentSongFlow: StateFlow<Song?> = _currentSongFlow
-    private var currentSong: Song? = null
-
-    private var currentPlaylist: List<Song>? = null
-
     private val _isPlayingState = MutableStateFlow(false)
+    val isPlayingState: StateFlow<Boolean> = _isPlayingState
 
-   // val isPlayingState: StateFlow<Boolean> = _isPlayingState
-
+    private var currentSong: Song? = null
+    private var currentPlaylist: List<Song>? = null
     //private val _songCompletion = MutableSharedFlow<Unit>()
 
    // val songCompletion = _songCompletion.asSharedFlow()
@@ -122,13 +119,15 @@ class MusicPlaybackService : LifecycleService() {
             return CurrentPlayerState(
 
                 song = this@MusicPlaybackService.currentSong,
-
+                isLoopingEnabled = this@MusicPlaybackService.isLoopingEnabled,
                 playlist = this@MusicPlaybackService.currentPlaylist
             )
         }
-
+        private val _isLoopingEnabledState = MutableStateFlow(false)
+        val isLoopingEnabledState: StateFlow<Boolean> = _isLoopingEnabledState
         fun setLooping(isLooping: Boolean) {
             this@MusicPlaybackService.setLooping(isLooping)
+            _isLoopingEnabledState.value = isLooping
         }
     }
 

@@ -8,7 +8,8 @@ data class PlaybackState(
 )
 data class CurrentPlayerState(
     val song: Song?,
-    val playlist: List<Song>?
+    val playlist: List<Song>?,
+    val isLoopingEnabled: Boolean
 )
 data class PlayerUiState(
     val currentPlayingSong: Song? = null,

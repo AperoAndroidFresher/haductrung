@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -50,7 +52,8 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                         currentPlayingSong = restoredSong,
                         currentPlaylist = restoredPlaylist,
                         currentSongIndex = restoredIndex,
-                        isPlaying = true
+                        isPlaying = true,
+                        isLoopingEnabled = serviceState.isLoopingEnabled
                     )
                 }
             }
@@ -59,15 +62,41 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
             }
 
             serviceJob = viewModelScope.launch {
-                musicService?.playbackState?.collect { playbackState ->
-                    _state.update { currentState ->
-                        currentState.copy(
-                            currentPosition = playbackState.currentPosition,
-                            totalDuration = playbackState.totalDuration,
-                            progress = if (playbackState.totalDuration > 0) {
-                                playbackState.currentPosition.toFloat() / playbackState.totalDuration
-                            } else 0f
-                        )
+                // 1. Theo dõi bài hát hiện tại từ Service (đây là phần bạn cần thêm)
+                launch {
+                    musicService?.currentSongFlow
+                        ?.filterNotNull()
+                        ?.collect { song ->
+                            _state.update { currentState ->
+                                val newIndex = currentState.currentPlaylist?.indexOf(song) ?: -1
+                                currentState.copy(
+                                    currentPlayingSong = song,
+                                    currentSongIndex = newIndex,
+                                    isPlaying = true
+                                )
+                            }
+                        }
+                }
+                launch {
+                    musicService?.playbackState?.collect { playbackState ->
+                        _state.update { currentState ->
+                            currentState.copy(
+                                currentPosition = playbackState.currentPosition,
+                                totalDuration = playbackState.totalDuration,
+                                progress = if (playbackState.totalDuration > 0) {
+                                    playbackState.currentPosition.toFloat() / playbackState.totalDuration
+                                } else 0f
+                            )
+                        }
+                    }
+                }
+                launch {
+                    musicService?.isPlayingState?.collect { isPlaying ->
+                        _state.update { currentState ->
+                            currentState.copy(
+                                isPlaying = isPlaying
+                            )
+                        }
                     }
                 }
             }
@@ -110,6 +139,7 @@ class PlayerViewModel(private val application: Application) : ViewModel() {
                     putExtra("SONG_TITLE", intent.song.title)
                     putExtra("SONG_FILE_PATH", intent.song.filePath)
                     putExtra("IS_PERSISTENT", isPersistent)
+                    putExtra("IS_LOOPING_ENABLED", state.value.isLoopingEnabled)
                 }
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     application.startForegroundService(serviceIntent)
