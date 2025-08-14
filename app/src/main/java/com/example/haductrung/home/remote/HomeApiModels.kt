@@ -2,52 +2,28 @@ package com.example.haductrung.home.remote
 
 import com.google.gson.annotations.SerializedName
 
-/**
- * Lớp này đại diện cho toàn bộ phản hồi JSON từ API.
- * Nó chứa một đối tượng "topalbums".
- */
 data class TopAlbumsResponse(
     @SerializedName("topalbums") val topAlbums: TopAlbumsContainer
 )
 
-/**
- * Lớp này chứa danh sách các album.
- * Tên trường "albumList" khớp với khóa "album" trong JSON.
- */
 data class TopAlbumsContainer(
     @SerializedName("album") val albumList: List<AlbumFromApi>
 )
-
-/**
- * Đây là "khuôn mẫu" chính cho một Album.
- * Nó chỉ chứa những trường chúng ta cần: name, artist, và imageList.
- */
 data class AlbumFromApi(
     @SerializedName("name") val name: String,
     @SerializedName("artist") val artist: ArtistInfo,
     @SerializedName("image") val imageList: List<ImageInfo>
 ) {
-    /**
-     * Hàm tiện ích để lấy URL của ảnh có size "extralarge" một cách an toàn.
-     * Nếu không tìm thấy hoặc URL rỗng, nó sẽ trả về null.
-     */
     fun getExtraLargeImageUrl(): String? {
         return imageList.find { it.size == "extralarge" }?.url?.ifEmpty { null }
     }
 }
 
-/**
- * Khuôn mẫu cho đối tượng "artist" bên trong một album.
- * Chúng ta chỉ cần lấy "name".
- */
 data class ArtistInfo(
     @SerializedName("name") val name: String
 )
 
-/**
- * Khuôn mẫu cho một đối tượng ảnh trong danh sách "image".
- * Chú ý: Khóa trong JSON là "#text", chúng ta dùng SerializedName để ánh xạ.
- */
+
 data class ImageInfo(
     @SerializedName("#text") val url: String,
     @SerializedName("size") val size: String

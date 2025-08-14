@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,6 +20,7 @@ import com.example.haductrung.home.BarColors
 import com.example.haductrung.home.remote.ArtistInfo
 import com.example.haductrung.home.remote.ImageInfo
 import com.example.haductrung.home.remote.TrackFromApi
+import com.example.haductrung.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +34,7 @@ fun TopTracksScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Top Tracks",
+                        text = stringResource(id = R.string.top_tracks),
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
@@ -64,14 +66,12 @@ fun TopTracksScreen(
             horizontalArrangement = Arrangement.spacedBy(30.dp)
         ) {
             itemsIndexed(tracks) { index, track ->
-                // Tính toán màu dựa trên index
                 val color = BarColors[index % BarColors.size]
                 TrackItem(track = track, color = color)
             }
         }
     }
 }
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable

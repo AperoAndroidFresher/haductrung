@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.example.haductrung.R
@@ -72,7 +73,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AppHeader(
-                title = "MY INFORMATION",
+                title = stringResource(id = R.string.my_information),
                 iconResId = R.drawable.icon,
                 onIconClick = { onIntent(ProfileIntent.OnEditClick) }
             )
@@ -110,10 +111,10 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 LabeledInput(
-                    label = "NAME",
+                    label = stringResource(id = R.string.name_label),
                     value = state.name,
                     onValueChange = {onIntent(ProfileIntent.OnNameChange(it))},
-                    placeholderText = "Enter your name...",
+                    placeholderText = stringResource(id = R.string.name_placeholder),
                     modifier = Modifier.weight(1f),
                     enabled = state.isEditing,
                     isError = state.nameError != null,
@@ -121,10 +122,10 @@ fun ProfileScreen(
 
                 )
                 LabeledInput(
-                    label = "PHONE NUMBER",
+                    label = stringResource(id = R.string.phone_label),
                     value = state.phone,
                     onValueChange ={onIntent(ProfileIntent.OnPhOneChange(it))} ,
-                    placeholderText = "Your phone number...",
+                    placeholderText = stringResource(id = R.string.phone_label),
                     modifier = Modifier.weight(1f),
                     enabled = state.isEditing,
                     isError = state.phoneError != null,
@@ -135,10 +136,10 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             LabeledInput(
-                label = "UNIVERSITY NAME",
+                label = stringResource(id = R.string.university_label),
                 value = state.university,
                 onValueChange = {onIntent(ProfileIntent.OnUniversityChange(it))},
-                placeholderText = "Your University name...",
+                placeholderText = stringResource(id = R.string.university_placeholder),
                 enabled = state.isEditing,
                 isError = state.universityError != null,
                 errorMessage = state.universityError
@@ -148,23 +149,23 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             LabeledInput(
-                label = "DESCRIBE YOURSELF",
+                label = stringResource(id = R.string.describe_label),
                 value = state.description,
                 onValueChange = {onIntent(ProfileIntent.OnDescriptiOnChange(it))},
-                placeholderText = "Enter a description...",
+                placeholderText = stringResource(id = R.string.describe_placeholder),
                 height = 200.dp,
                 enabled = state.isEditing
             )
             Spacer(modifier = Modifier.weight(1f))
             if (state.isEditing) {
                 PrimaryButton(
-                    text = "SUBMIT",
+                    text = stringResource(id = R.string.submit_button),
                     onClick = {onIntent(ProfileIntent.OnSubmitClick)},
                     modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp),
                 )
             }else {
                 PrimaryButton(
-                    text = "LOGOUT",
+                    text = stringResource(id = R.string.logout_button),
                     onClick = { onIntent(ProfileIntent.OnLogoutClick) },
                     modifier = Modifier.padding(vertical = 20.dp, horizontal = 80.dp),
                     textColor = Color.Red

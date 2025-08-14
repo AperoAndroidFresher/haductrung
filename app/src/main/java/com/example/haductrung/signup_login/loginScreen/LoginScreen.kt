@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -32,17 +33,17 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize().background(color = Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Header("Login to your account")
+        Header(stringResource(id = R.string.login_header))
         Spacer(Modifier.height(40.dp))
         FormatTextField(
-            placeholderText = "Username",
+            placeholderText =stringResource(id = R.string.username_placeholder),
             value = state.username,
             onValueChange = { onIntent(LoginIntent.OnUsernameChange(it)) },
             iconResId = R.drawable.username
         )
         Spacer(Modifier.height(20.dp))
         FormatTextField(
-            placeholderText = "Password",
+            placeholderText = stringResource(id = R.string.password_placeholder),
             value = state.password,
             onValueChange = { onIntent(LoginIntent.OnPasswordChange(it)) },
             iconResId = R.drawable.password,
@@ -62,13 +63,13 @@ fun LoginScreen(
             onCheckedChange = { onIntent(LoginIntent.OnCheckedChange(it)) }
         )
         FormatButton(
-            text = "Login",
+            text = stringResource(id = R.string.login_button),
             onClick = { onIntent(LoginIntent.OnLoginClick) }
         )
         Spacer(Modifier.weight(1f))
         TextSignup(
-            promptText = "Don’t have an account?",
-            actionText = "Sign up",
+            promptText = stringResource(id = R.string.no_account_prompt),
+            actionText = stringResource(id = R.string.signup_action),
             onActionClick = { onIntent(LoginIntent.SetNews) } 
         )
     }

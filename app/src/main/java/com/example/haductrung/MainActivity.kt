@@ -1,7 +1,9 @@
 package com.example.haductrung
 
 import android.Manifest
+import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -18,8 +20,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -68,6 +75,11 @@ import com.example.haductrung.home.bottomHomeBar.BottomHomeBar
 import com.example.haductrung.home.remote.detailScreenRemote.TopAlbumsScreen
 import com.example.haductrung.home.remote.detailScreenRemote.TopArtistsScreen
 import com.example.haductrung.home.remote.detailScreenRemote.TopTracksScreen
+import com.example.haductrung.home.settingScreen.SettingsDataStore
+import com.example.haductrung.home.settingScreen.SettingsEvent
+import com.example.haductrung.home.settingScreen.SettingsScreen
+import com.example.haductrung.home.settingScreen.SettingsViewModel
+import com.example.haductrung.home.settingScreen.setAppLanguage
 import com.example.haductrung.musicPlayerBar.BottomPlayerScreen
 import com.example.haductrung.musicPlayerBar.PlayerDetailScreen
 import com.example.haductrung.musicPlayerBar.PlayerUiIntent
@@ -78,6 +90,9 @@ import com.example.haductrung.playback.PlayerViewModelFactory
 import com.example.haductrung.repository.SongRepository
 import com.example.haductrung.repository.UserRepository
 import com.example.haductrung.signup_login.SessionManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 @Serializable
@@ -116,15 +131,27 @@ object TopArtists
 @Serializable
 object TopTracks
 
+@Serializable
+object Settings
+
 
 class MainActivity : ComponentActivity() {
-    private val playerViewModel: PlayerViewModel by viewModels {
-        PlayerViewModelFactory(application)
-    }
+    private val playerViewModel: PlayerViewModel by viewModels { PlayerViewModelFactory(application) }
+
+    private val settingsViewModel: SettingsViewModel by viewModels()
     private fun handleIntent(intent: Intent) {
         if (intent.action == "ACTION_OPEN_PLAYER_DETAIL") {
             playerViewModel.processIntent(PlayerUiIntent.OpenPlayerDetail)
         }
+    }
+    override fun attachBaseContext(newBase: Context) {
+        val settingsDataStore = SettingsDataStore(newBase)
+        val savedLanguageCode: String = runBlocking {
+            settingsDataStore.getLanguage.first()
+        }
+        setAppLanguage(newBase, savedLanguageCode)
+
+        super.attachBaseContext(newBase)
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -281,6 +308,7 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                             is HomeEvent.NavigateToTopAlbums -> navController.navigate(TopAlbums)
                             is HomeEvent.NavigateToTopArtists -> navController.navigate(TopArtists)
                             is HomeEvent.NavigateToTopTracks -> navController.navigate(TopTracks)
+                            is HomeEvent.NavigateToSettings -> navController.navigate(Settings)
                         }
                     }
                 }
@@ -291,45 +319,61 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                 )
             }
             composable<TopAlbums> {
-                // Lấy lại ViewModel đã được chia sẻ từ Home
+
                 val navBackStackEntry = navController.getBackStackEntry(Home::class)
                 val viewModelh: HomeViewModel = viewModel(viewModelStoreOwner = navBackStackEntry)
                 val state by viewModelh.state.collectAsStateWithLifecycle()
 
-                // Gọi màn hình mới và truyền dữ liệu vào
                 TopAlbumsScreen(
-                    albums = state.topAlbums, // Truyền toàn bộ danh sách album
+                    albums = state.topAlbums,
                     onBackClick = {
-                        navController.popBackStack() // Xử lý khi nhấn nút back
+                        navController.popBackStack()
                     }
                 )
             }
             composable<TopArtists> {
-                // Lấy lại ViewModel đã được chia sẻ từ Home
                 val navBackStackEntry = navController.getBackStackEntry(Home::class)
                 val viewModelh: HomeViewModel = viewModel(viewModelStoreOwner = navBackStackEntry)
                 val state by viewModelh.state.collectAsStateWithLifecycle()
 
-                // Gọi màn hình mới và truyền dữ liệu vào
                 TopArtistsScreen(
-                    artists = state.topArtists, // Truyền toàn bộ danh sách nghệ sĩ
+                    artists = state.topArtists,
                     onBackClick = {
-                        navController.popBackStack() // Xử lý khi nhấn nút back
+                        navController.popBackStack()
                     }
                 )
             }
             composable<TopTracks> {
-                // Lấy lại ViewModel đã được chia sẻ từ Home
                 val navBackStackEntry = navController.getBackStackEntry(Home::class)
                 val viewModelh: HomeViewModel = viewModel(viewModelStoreOwner = navBackStackEntry)
                 val state by viewModelh.state.collectAsStateWithLifecycle()
-
-                // Gọi màn hình mới và truyền dữ liệu vào
                 TopTracksScreen(
-                    tracks = state.topTracks, // Truyền toàn bộ danh sách track
+                    tracks = state.topTracks,
                     onBackClick = {
-                        navController.popBackStack() // Xử lý khi nhấn nút back
+                        navController.popBackStack()
                     }
+                )
+            }
+            composable<Settings> {
+                val viewModel: SettingsViewModel = viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                val context = LocalContext.current
+                LaunchedEffect(Unit) {
+                    viewModel.event.collect { event ->
+                        when (event) {
+                            is SettingsEvent.NavigateBack -> {
+                                navController.popBackStack()
+                            }
+                            is SettingsEvent.RecreateActivity -> {
+                                (context as? Activity)?.recreate()
+                            }
+                        }
+                    }
+                }
+
+                SettingsScreen(
+                    state = state,
+                    onIntent = viewModel::processIntent
                 )
             }
             composable<Library> {
@@ -541,7 +585,7 @@ fun AppNavigation(playerViewModel: PlayerViewModel, playerState: PlayerUiState) 
                 )
             }
         }
-        Box(modifier = Modifier.fillMaxSize(),) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {

@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,7 +59,7 @@ fun LibraryScreen(
                     .padding(vertical = 8.dp)
             ) {
                 Text(
-                    "Library",
+                    stringResource(id = R.string.library),
                     color = Color.White,
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -122,7 +123,7 @@ fun LibraryScreen(
                                     menuContent = {
 
                                         CustomMenuItem(
-                                            text = "Add to playlist",
+                                            text = stringResource(id = R.string.add_to_playlist),
                                             iconResId = R.drawable.addplaylist,
                                             onClick = {
                                                 onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
@@ -130,7 +131,7 @@ fun LibraryScreen(
                                             }
                                         )
                                         CustomMenuItem(
-                                            text = "Share",
+                                            text =  stringResource(id = R.string.share),
                                             iconResId = R.drawable.share,
                                             onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                         )
@@ -159,7 +160,7 @@ fun LibraryScreen(
                                     isSortMode = state.isSortMode,
                                     menuContent = {
                                         CustomMenuItem(
-                                            text = "Add to playlist",
+                                            text = stringResource(id = R.string.add_to_playlist),
                                             iconResId = R.drawable.addplaylist,
                                             onClick = {
                                                 onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
@@ -167,7 +168,7 @@ fun LibraryScreen(
                                             }
                                         )
                                         CustomMenuItem(
-                                            text = "Share",
+                                            text = stringResource(id = R.string.share),
                                             iconResId = R.drawable.share,
                                             onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                         )
@@ -210,7 +211,7 @@ fun LibraryScreen(
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             menuContent = {
                                                 CustomMenuItem(
-                                                    text = "Add to playlist",
+                                                    text = stringResource(id = R.string.add_to_playlist),
                                                     iconResId = R.drawable.addplaylist,
                                                     onClick = {
                                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song))
@@ -242,7 +243,7 @@ fun LibraryScreen(
                                             menuContent = {
 
                                                 CustomMenuItem(
-                                                    text = "Add to playlist",
+                                                    text = stringResource(id = R.string.add_to_playlist),
                                                     iconResId = R.drawable.addplaylist,
                                                     onClick = {
                                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song))
@@ -273,7 +274,7 @@ fun LibraryScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.clickable { onIntent(LibraryIntent.OnRequestPermissionAgain) }
             ) {
-                Text("Please grant access permission in settings", color = Color.White)
+                Text(stringResource(id = R.string.grant_permission), color = Color.White)
             }
 
         }
@@ -293,7 +294,7 @@ private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No internet connection,\nplease check your\n connection again",
+            text = stringResource(id = R.string.errormessage),
             color = Color.White,
             textAlign = TextAlign.Center,
             fontSize = 20.sp
@@ -304,7 +305,7 @@ private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C2CB)),
             shape = RoundedCornerShape(16)
         ) {
-            Text(text = "Try again", color = Color.White)
+            Text(text = stringResource(id = R.string.try_again), color = Color.White)
         }
     }
 }

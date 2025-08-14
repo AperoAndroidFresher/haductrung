@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,7 +46,7 @@ fun AddToPlaylistScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Choose playlist",
+                    text = stringResource(id = R.string.choose_playlist),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -160,7 +161,7 @@ private fun PlaylistSelectionItem(
             )
             val songCount = Converters().fromString(playlist.songIdsJson).size
             Text(
-                text = "$songCount songs",
+                text = "$songCount ${stringResource(id = R.string.songs)}",
                 color = Color.Gray,
                 fontSize = 14.sp
             )

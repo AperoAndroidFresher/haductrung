@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Các chuỗi cũ của bạn -->
+    <string name="app_name">haductrung</string>
+    <string name="prev_desc">Précédent</string>
+    <string name="play_pause_desc">Lire/Pause</string>
+    <string name="next_desc">Suivant</string>
+    <string name="close_desc">Fermer</string>
+
+    <!-- Các chuỗi mới cho Home Screen -->
+    <string name="welcome_back">Bon retour !</string>
+    <string name="top_albums">Meilleurs albums</string>
+    <string name="top_tracks">Meilleurs morceaux</string>
+    <string name="top_artists">Meilleurs artistes</string>
+    <string name="see_all">Voir tout</string>
+    <string name="rankings">Classements</string>
+    <string name="errormessage">Pas de connexion internet,\nveuillez vérifier votre\n connexion à nouveau</string>
+    <string name="try_again">Réessayer</string>
+    <!-- Các chuỗi mới cho Settings Screen -->
+    <string name="settings">Paramètres</string>
+    <string name="language">Langue</string>
+    <string name="english">English</string>
+    <string name="vietnamese">Tiếng Việt</string>
+    <string name="korean">한국어</string>
+    <string name="french">Français</string>
+
+    <string name="my_playlists">Mes playlists</string>
+    <string name="no_playlists">Vous n\'avez pas de playlists.\nCliquez sur le bouton « + » pour en ajouter une</string>
+    <string name="give_playlist_title">Donnez un titre à votre playlist</string>
+    <string name="cancel">Annuler</string>
+    <string name="new_playlist">Nouvelle playlist</string>
+    <string name="rename_playlist">Renommer la playlist</string>
+    <string name="create_button">Créer</string>
+    <string name="save_button">Sauvegarder</string>
+
+    <string name="rename_button">Renommer</string>
+    <string name="remove_playlist">Supprimer la playlist</string>
+
+    <string name="remove_from_playlist">Supprimer de la playlist</string>
+    <string name="share">Partager</string>
+    <string name="empty_playlist">Cette playlist est vide.</string>
+// pf
+    <string name="success">SUCCÈS !</string>
+    <string name="info_updated">Vos informations ont été\nmises à jour !</string>
+    <string name="my_information">MES INFORMATIONS</string>
+    <string name="name_label">NOM</string>
+    <string name="name_placeholder">Entrez votre nom...</string>
+    <string name="phone_label">NUMÉRO DE TÉLÉPHONE</string>
+    <string name="phone_placeholder">Votre numéro de téléphone...</string>
+    <string name="university_label">NOM DE L\'UNIVERSITÉ</string>
+    <string name="university_placeholder">Le nom de votre Université...</string>
+    <string name="describe_label">DÉCRIVEZ-VOUS</string>
+    <string name="describe_placeholder">Entrez une description...</string>
+    <string name="submit_button">SOUMETTRE</string>
+    <string name="logout_button">DÉCONNEXION</string>
+
+    //li
+    <string name="login_header">Connectez-vous à votre compte</string>
+    <string name="username_placeholder">Nom d\'utilisateur</string>
+    <string name="password_placeholder">Mot de passe</string>
+    <string name="login_button">Connexion</string>
+    <string name="no_account_prompt">Vous n\'avez pas de compte ?</string>
+    <string name="signup_action">S\'inscrire</string>
+    <string name="remember_me">Se souvenir de moi</string>
+    //su
+    <string name="signup_header">S\'inscrire</string>
+    <string name="confirm_password_placeholder">Confirmer le mot de passe</string>
+    <string name="email_placeholder">Email</string>
+    <string name="signup_button">S\'inscrire</string>
+    //lib
+    <string name="add_to_playlist">Ajouter à la playlist</string>
+    <string name="local">Local</string>
+    <string name="remote">Distant</string>
+    <string name="library">Bibliothèque</string>
+    <string name="choose_playlist">Choisir une playlist</string>
+    <string name="grant_permission">Veuillez accorder l\'autorisation d\'accès dans les paramètres</string>
+    <string name="songs">Chansons</string>
+</resources>

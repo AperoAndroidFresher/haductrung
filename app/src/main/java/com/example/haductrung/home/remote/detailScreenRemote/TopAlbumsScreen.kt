@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -20,6 +21,7 @@ import com.example.haductrung.home.AlbumItem
 import com.example.haductrung.home.remote.AlbumFromApi
 import com.example.haductrung.home.remote.ArtistInfo
 import com.example.haductrung.home.remote.ImageInfo
+import com.example.haductrung.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun TopAlbumsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Top Albums",
+                        text = stringResource(id = R.string.top_albums),
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )

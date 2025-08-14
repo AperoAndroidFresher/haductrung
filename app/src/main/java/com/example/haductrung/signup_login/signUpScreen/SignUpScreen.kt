@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -31,10 +32,10 @@ fun SignupScreen(
         modifier = Modifier.fillMaxSize().background(color = Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Header("Sign Up")
+        Header(stringResource(id = R.string.signup_action))
         Spacer(Modifier.height(40.dp))
         FormatTextField(
-            placeholderText = "Username",
+            placeholderText = stringResource(id = R.string.username_placeholder),
             value = state.username,
             onValueChange = {onIntent(SignUpIntent.OnUsernameChange(it))},
             iconResId = R.drawable.username,
@@ -43,7 +44,7 @@ fun SignupScreen(
         )
         Spacer(Modifier.height(20.dp))
         FormatTextField(
-            placeholderText = "Password",
+            placeholderText = stringResource(id = R.string.password_placeholder),
             value = state.password,
             onValueChange = {onIntent(SignUpIntent.OnPasswordChange(it))},
             iconResId = R.drawable.password,
@@ -62,7 +63,7 @@ fun SignupScreen(
         )
         Spacer(Modifier.height(20.dp))
         FormatTextField(
-            placeholderText = "Confirm password",
+            placeholderText = stringResource(id = R.string.confirm_password_placeholder),
             value = state.confirmPassword,
             onValueChange = {onIntent(SignUpIntent.OnConfirmPasswordChange(it))},
             iconResId = R.drawable.password,
@@ -81,7 +82,7 @@ fun SignupScreen(
         )
         Spacer(Modifier.height(20.dp))
         FormatTextField(
-            placeholderText = "Email",
+            placeholderText = stringResource(id = R.string.email_placeholder),
             value = state.email,
             onValueChange = {onIntent(SignUpIntent.OnEmailChange(it))},
             iconResId = R.drawable.mail,
@@ -89,6 +90,6 @@ fun SignupScreen(
             errorMessage = state.emailError
         )
         Spacer(Modifier.weight(1f))
-        FormatButton("Sign Up", onClick =  {onIntent(SignUpIntent.OnSignUpClick)})
+        FormatButton(stringResource(id = R.string.signup_button), onClick =  {onIntent(SignUpIntent.OnSignUpClick)})
     }
 }

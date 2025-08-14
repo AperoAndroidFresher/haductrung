@@ -34,6 +34,7 @@ sealed interface HomeIntent {
     data object NavigateToTopAlbums : HomeIntent
     data object NavigateToTopArtists : HomeIntent
     data object NavigateToTopTracks : HomeIntent
+    data object NavigateToSettings : HomeIntent
 }
 
 
@@ -44,4 +45,5 @@ sealed interface HomeEvent {
     data object NavigateToTopAlbums : HomeEvent
     data object NavigateToTopArtists : HomeEvent
     data object NavigateToTopTracks : HomeEvent
+    data object NavigateToSettings : HomeEvent
 }

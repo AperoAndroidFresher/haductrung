@@ -74,10 +74,10 @@ fun PlayerDetailScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "Debug: Số bài trong playlist = ${state.currentPlaylist?.size ?: 0}",
-                color = Color.Red
-            )
+//            Text(
+//                text = "Debug: Số bài trong playlist = ${state.currentPlaylist?.size ?: 0}",
+//                color = Color.Red
+//            )
             Image(
                 painter = painterResource(id = R.drawable.back),
                 contentDescription = "Back",

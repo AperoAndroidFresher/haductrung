@@ -126,6 +126,7 @@ class HomeViewModel(
                 is HomeIntent.NavigateToTopAlbums -> _event.emit(HomeEvent.NavigateToTopAlbums)
                 is HomeIntent.NavigateToTopArtists -> _event.emit(HomeEvent.NavigateToTopArtists)
                 is HomeIntent.NavigateToTopTracks -> _event.emit(HomeEvent.NavigateToTopTracks)
+                is HomeIntent.NavigateToSettings -> _event.emit(HomeEvent.NavigateToSettings)
             }
         }
     }

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -61,7 +62,8 @@ fun Home(
         TopHomeBar(
             onProfileIconClick = { onIntent(HomeIntent.NavigateToProfile) },
             profileImageUri = state.imageUri,
-            username = state.username
+            username = state.username,
+            onIntent = onIntent,
         )
         if (state.topAlbumsState is ContentLoadingState.Error ||
             state.topTracksState is ContentLoadingState.Error ||
@@ -81,7 +83,7 @@ private fun MainContent(state: HomeState,onIntent: (HomeIntent) -> Unit) {
         // --- Phần 1: Top Albums ---
         item {
             SectionHeader(
-                title = "Top Albums",
+                title = stringResource(id = R.string.top_albums),
                 onSeeAllClick = { onIntent(HomeIntent.NavigateToTopAlbums) }
             )
             when (state.topAlbumsState) {
@@ -111,9 +113,8 @@ private fun MainContent(state: HomeState,onIntent: (HomeIntent) -> Unit) {
                 is ContentLoadingState.Error -> {}
             }
         }
-
         item {
-            SectionHeader(title = "Top Tracks", onSeeAllClick = { onIntent(HomeIntent.NavigateToTopTracks) })
+            SectionHeader(title = stringResource(id = R.string.top_tracks), onSeeAllClick = { onIntent(HomeIntent.NavigateToTopTracks) })
             when (state.topTracksState) {
                 is ContentLoadingState.Loading -> {
                     Box(modifier = Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {
@@ -137,7 +138,7 @@ private fun MainContent(state: HomeState,onIntent: (HomeIntent) -> Unit) {
 
         // --- Phần 3: Top Artists
         item {
-            SectionHeader(title = "Top Artists", onSeeAllClick = {  onIntent(HomeIntent.NavigateToTopArtists)})
+            SectionHeader(title = stringResource(id = R.string.top_artists), onSeeAllClick = {  onIntent(HomeIntent.NavigateToTopArtists)})
             when (state.topArtistsState) {
                 is ContentLoadingState.Loading -> {
                     Box(modifier = Modifier.fillMaxWidth().height(140.dp), contentAlignment = Alignment.Center) {
@@ -174,7 +175,7 @@ fun SectionHeader(
     ) {
         Text(text = title, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Text(
-            text = "See all",
+            text = stringResource(id = R.string.see_all),
             color = Color(color =0xFF00C2CB ),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
@@ -240,7 +241,7 @@ private fun ErrorView(onIntent: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No internet connection,\nplease check your\n connection again",
+            text = stringResource(id = R.string.errormessage),
             color = Color.White,
             textAlign = TextAlign.Center,
             fontSize = 20.sp
@@ -251,7 +252,7 @@ private fun ErrorView(onIntent: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C2CB)),
             shape = RoundedCornerShape(16)
         ) {
-            Text(text = "Try again", color = Color.White)
+            Text(text = stringResource(id = R.string.try_again), color = Color.White)
         }
     }
 }
@@ -364,7 +365,8 @@ fun ArtistItem(artist: ArtistFromApi, modifier: Modifier = Modifier) {
 @Composable
 fun TopHomeBar(
     modifier: Modifier = Modifier,
-    onProfileIconClick: () -> Unit = {},
+    onProfileIconClick: () -> Unit ,
+    onIntent: (HomeIntent) -> Unit,
     profileImageUri: Uri? = null,
     username: String = ""
 ) {
@@ -374,18 +376,31 @@ fun TopHomeBar(
             .padding(top = 30.dp, start = 15.dp, end = 15.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            CircularProfileImage(model = profileImageUri ?: R.drawable.meo2, size = 45.dp)
-            Column(modifier = Modifier.weight(1f).padding(start = 10.dp)) {
-                Text(text = "Welcome back !", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            CircularProfileImage(
+                model = profileImageUri ?: R.drawable.meo2,
+                size = 45.dp,
+                modifier = Modifier.clickable(onClick = onProfileIconClick)
+            )
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp)
+                .clickable  (onClick = onProfileIconClick)) {
+                Text(text = stringResource(id = R.string.welcome_back), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Text(text = username, fontSize = 16.sp, color = Color.Gray)
             }
-            Icon(modifier = Modifier.size(30.dp, 30.dp).clickable(onClick = onProfileIconClick), painter = painterResource(id = R.drawable.setting_icon), contentDescription = "setting icon", tint = Color.White)
+            Icon(
+                modifier = Modifier
+                    .size(30.dp, 30.dp)
+                    .clickable(onClick = { onIntent(HomeIntent.NavigateToSettings) }),
+                painter = painterResource(id = R.drawable.setting_icon),
+                contentDescription = "setting icon", tint = Color.White
+            )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painter = painterResource(id = R.drawable.rank), contentDescription = "Rankings", tint = Color(0xFFFFD700), modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Rankings", color = Color(color = 0xFF00C2CB), fontWeight = FontWeight.SemiBold, fontSize = 25.sp)
+            Text(text = stringResource(id = R.string.rankings), color = Color(color = 0xFF00C2CB), fontWeight = FontWeight.SemiBold, fontSize = 25.sp)
         }
     }
 }
