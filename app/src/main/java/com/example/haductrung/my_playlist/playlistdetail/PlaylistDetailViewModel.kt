@@ -39,7 +39,10 @@ class PlaylistDetailViewModel(
                 _state.update { it.copy(isGridView = !it.isGridView) }
             }
             is PlaylistDetailIntent.OnMoreClick -> {
-                _state.update { it.copy(songWithMenu = intent.song.id) }
+                _state.update { it.copy(
+                    songWithMenu = intent.song.id,
+                    selectedSongId = intent.song.id
+                ) }
             }
             is PlaylistDetailIntent.OnDismissMenu -> {
                 _state.update { it.copy(songWithMenu = null) }
@@ -48,6 +51,9 @@ class PlaylistDetailViewModel(
                 viewModelScope.launch(Dispatchers.IO) {
                     removeSongFromPlaylist(intent.song)
                 }
+            }
+            is PlaylistDetailIntent.OnSongSelected -> {
+                _state.update { it.copy(selectedSongId = intent.songId) }
             }
         }
     }

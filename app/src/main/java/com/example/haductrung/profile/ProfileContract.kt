@@ -26,6 +26,7 @@ sealed interface ProfileIntent{
     data object OnAvatarClick : ProfileIntent
     data class OnAvatarChange(val newUri: Uri?) : ProfileIntent
     data object OnBack : ProfileIntent
+    data object OnLogoutClick : ProfileIntent
 
 }
 //event
@@ -33,4 +34,5 @@ sealed interface ProfileEvent{
     data object ShowSuccessPopup : ProfileEvent
     data object OpenImagePicker : ProfileEvent
     data object NavigateBack : ProfileEvent
+    data object NavigateToLogin : ProfileEvent
 }

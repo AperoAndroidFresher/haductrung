@@ -37,7 +37,23 @@ class ProfileViewModel(
         SessionManager.currentUserId
             .onEach { userId ->
                 if (userId != null) {
-                    loadUserProfile(userId)
+                    // Bắt đầu lắng nghe sự thay đổi của user
+                    userRepository.findUserById(userId)?.collect { userEntity ->
+
+                        currentUser = userEntity
+                        userEntity?.let { user ->
+                            _state.update {
+                                it.copy(
+                                    isLoading = false,
+                                    name = user.username,
+                                    phone = user.phone ?: "",
+                                    university = user.university ?: "",
+                                    description = user.description ?: "",
+                                    imageUri = user.imageUri?.toUri()
+                                )
+                            }
+                        }
+                    }
                 } else {
                     _state.value = ProfileState()
                     currentUser = null
@@ -46,24 +62,7 @@ class ProfileViewModel(
             .launchIn(viewModelScope)
     }
 
-    private fun loadUserProfile(userId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _state.update { it.copy(isLoading = true) }
-            currentUser = userRepository.findUserById(userId)
-            currentUser?.let { user ->
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        name = user.username,
-                        phone = user.phone ?: "",
-                        university = user.university ?: "",
-                        description = user.description ?: "",
-                        imageUri = user.imageUri?.toUri()
-                    )
-                }
-            }
-        }
-    }
+
 
     fun processIntent(intent: ProfileIntent) {
         when (intent) {
@@ -102,31 +101,40 @@ class ProfileViewModel(
             }
 
             is ProfileIntent.OnAvatarChange -> {
-                intent.newUri?.let { uri ->
-                    saveImageToInternalStorage(uri)
+                _state.update { it.copy(imageUri = intent.newUri) }
+            }
+            is ProfileIntent.OnLogoutClick -> {
+                viewModelScope.launch { SessionManager.logout()
+                    _event.emit(ProfileEvent.NavigateToLogin)
                 }
             }
         }
 
     }
 
-    private fun saveImageToInternalStorage(tempUri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val context = getApplication<Application>().applicationContext
-            val inputStream: InputStream? = context.contentResolver.openInputStream(tempUri)
+    private fun saveImageToInternalStorage(tempUri: Uri): Uri? {
+        val context = getApplication<Application>().applicationContext
+        val inputStream: InputStream? = try {
+            context.contentResolver.openInputStream(tempUri)
+        } catch (e: Exception) {
+            return null
+        }
 
-            val userId = currentUser?.userId ?: System.currentTimeMillis()
-            val newFile = File(context.filesDir, "avatar_$userId.jpg")
-            val outputStream = FileOutputStream(newFile)
+        val userId = currentUser?.userId ?: System.currentTimeMillis()
+        val newFile = File(context.filesDir, "avatar_$userId.jpg")
 
-            inputStream?.use { input ->
-                outputStream.use { output ->
+        // Dùng try-with-resources (use) để đảm bảo stream luôn được đóng
+        try {
+            FileOutputStream(newFile).use { output ->
+                inputStream?.use { input ->
                     input.copyTo(output)
                 }
             }
-            val permanentUri = newFile.toUri()
-            _state.update { it.copy(imageUri = permanentUri) }
+        } catch (e: Exception) {
+            return null
         }
+
+        return newFile.toUri()
     }
 
     private suspend fun submitProfile() {
@@ -148,11 +156,21 @@ class ProfileViewModel(
             isValid = false
         }
         if (isValid && currentUser != null) {
+            var permanentImageUriString: String? = currentUser!!.imageUri
+            currentState.imageUri?.let { tempUri ->
+                // Nếu uri trong state không phải là uri đã lưu từ trước
+                if (tempUri.toString() != currentUser!!.imageUri) {
+                    // Lưu ảnh và lấy uri lâu dài
+                    val permanentUri = saveImageToInternalStorage(tempUri)
+                    permanentImageUriString = permanentUri?.toString()
+                }
+            }
             val updatedUser = currentUser!!.copy(
+                username = currentState.name,
                 phone = currentState.phone,
                 university = currentState.university,
                 description = currentState.description,
-                imageUri = currentState.imageUri?.toString()
+                imageUri = permanentImageUriString
             )
             userRepository.updateUser(updatedUser)
 

@@ -1,3 +1,74 @@
 <resources>
     <string name="app_name">haductrung</string>
+    <string name="prev_desc">Previous</string>
+    <string name="play_pause_desc">Play/Pause</string>
+    <string name="next_desc">Next</string>
+    <string name="close_desc">Close</string>
+    // Home Screen
+    <string name="welcome_back">Welcome back !</string>
+    <string name="top_albums">Top Albums</string>
+    <string name="top_tracks">Top Tracks</string>
+    <string name="top_artists">Top Artists</string>
+    <string name="see_all">See all</string>
+    <string name="rankings">Rankings</string>
+    <string name="errormessage">No internet connection,\nplease check your\n connection again</string>
+    <string name="try_again">Try again</string>
+    //Setting Screen
+    <string name="settings">Setting</string>
+    <string name="language">Language</string>
+    <string name="english">English</string>
+    <string name="vietnamese">Tiếng Việt</string>
+    <string name="korean">한국어</string>
+    <string name="french">Français</string>
+    //My Playlist Screen
+    <string name="my_playlists">My Playlists</string>
+    <string name="no_playlists">You don\'t have any playlists.\nClick the \"+\" button to add</string>
+    <string name="give_playlist_title">Give your playlist a title</string>
+    <string name="cancel">Cancel</string>
+    <string name="new_playlist">New Playlist</string>
+    <string name="rename_playlist">Rename Playlist</string>
+    <string name="create_button">Create</string>
+    <string name="save_button">Save</string>
+
+    <string name="rename_button">Rename</string>
+    <string name="remove_playlist">Remove Playlist</string>
+
+    <string name="remove_from_playlist">Remove from playlist</string>
+    <string name="share">Share</string>
+    <string name="empty_playlist">This playlist is empty.</string>
+    // profile
+    <string name="success">SUCCESS !</string>
+    <string name="info_updated">Your information has\nbeen updated!</string>
+    <string name="my_information">MY INFORMATION</string>
+    <string name="name_label">NAME</string>
+    <string name="name_placeholder">Enter your name...</string>
+    <string name="phone_label">PHONE NUMBER</string>
+    <string name="phone_placeholder">Your phone number...</string>
+    <string name="university_label">UNIVERSITY NAME</string>
+    <string name="university_placeholder">Your University name...</string>
+    <string name="describe_label">DESCRIBE YOURSELF</string>
+    <string name="describe_placeholder">Enter a description...</string>
+    <string name="submit_button">SUBMIT</string>
+    <string name="logout_button">LOGOUT</string>
+    //li
+    <string name="login_header">Login to your account</string>
+    <string name="username_placeholder">Username</string>
+    <string name="password_placeholder">Password</string>
+    <string name="login_button">Login</string>
+    <string name="no_account_prompt">Don\'t have an account?</string>
+    <string name="signup_action">Sign up</string>
+    <string name="remember_me">Remember me</string>
+    //su
+    <string name="signup_header">Sign Up</string>
+    <string name="confirm_password_placeholder">Confirm password</string>
+    <string name="email_placeholder">Email</string>
+    <string name="signup_button">Sign Up</string>
+    //lib
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="local">Local</string>
+    <string name="remote">Remote</string>
+    <string name="library">Library</string>
+    <string name="grant_permission">Please grant access permission in settings</string>
+    <string name="choose_playlist">Choose playlist</string>
+    <string name="songs">Songs</string>
 </resources>

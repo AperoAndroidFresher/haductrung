@@ -55,7 +55,10 @@ class LibraryViewModel(
             is LibraryIntent.RetryFetchRemoteSongs -> fetchRemoteSongs()
             is LibraryIntent.OnToggleViewClick -> _state.update { it.copy(isGridView = !it.isGridView) }
             is LibraryIntent.OnToggleSortClick -> _state.update { it.copy(isSortMode = !it.isSortMode) }
-            is LibraryIntent.OnMoreClick -> _state.update { it.copy(songWithMenu = intent.song.id) }
+            is LibraryIntent.OnMoreClick -> _state.update { it.copy(
+                songWithMenu = intent.song.id,
+                selectedSongId = intent.song.id
+            ) }
             is LibraryIntent.OnDismissMenu -> _state.update { it.copy(songWithMenu = null) }
             is LibraryIntent.CheckAndLoadSongs -> checkPermissionAndLoad()
             is LibraryIntent.OnRequestPermissionAgain -> viewModelScope.launch {
@@ -66,6 +69,9 @@ class LibraryViewModel(
 
             is LibraryIntent.OnAddToPlaylistClick -> {
                 addSongToLibraryAndNavigate(intent.song)
+            }
+            is LibraryIntent.OnSongSelected -> {
+                _state.update { it.copy(selectedSongId = intent.songId) }
             }
         }
     }
@@ -222,26 +228,6 @@ class LibraryViewModel(
             viewModelScope.launch { _event.emit(LibraryEvent.RequestPermission) }
         }
     }
-
-//    @SuppressLint("DefaultLocale")
-//    private fun mapEntitiesToUiSongs(entities: List<SongEntity>): List<Song> {
-//        return entities.map { entity ->
-//            Song(
-//                id = entity.songId,
-//                title = entity.title,
-//                artist = entity.artist,
-//                duration = String.format(
-//                    "%02d:%02d",
-//                    TimeUnit.MILLISECONDS.toMinutes(entity.durationMs),
-//                    TimeUnit.MILLISECONDS.toSeconds(entity.durationMs) -
-//                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(entity.durationMs))
-//                ),
-//                durationMs = entity.durationMs,
-//                filePath = entity.filePath,
-//                albumArtUri = entity.albumArtUri?.toUri()
-//            )
-//        }
-//    }
     @SuppressLint("DefaultLocale")
     private suspend fun mapRemoteToUiSongs(remoteSongs: List<RemoteSong>): List<Song> {
         val gson = Gson()

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,14 +43,14 @@ fun SuccessPopup(onDismissRequest: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "SUCCESS !",
+                    text = stringResource(id = R.string.success),
                     fontWeight = FontWeight.Bold,
                     fontSize = 36.sp,
                     color = Color.Green
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Your information has\nbeen updated!",
+                    text = stringResource(id = R.string.info_updated),
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold

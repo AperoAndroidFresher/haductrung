@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,8 +64,8 @@ fun MyPlaylistScreen(
 
         if (state.showCreatePlaylistDialog) {
             PlaylistActionDialog(
-                title = "New Playlist",
-                confirmButtonText = "Create",
+                title = stringResource(id = R.string.new_playlist),
+                confirmButtonText = stringResource(id = R.string.create_button),
                 onDismiss = { onIntent(PlaylistIntent.OnDismissCreatePlaylistDialog) },
                 onConfirm = { name -> onIntent(PlaylistIntent.OnConfirmCreatePlaylist(name)) }
             )
@@ -72,8 +73,8 @@ fun MyPlaylistScreen(
 
         state.playlistToRename?.let { playlistToRename ->
             PlaylistActionDialog(
-                title = "Rename Playlist",
-                confirmButtonText = "Save",
+                title = stringResource(id = R.string.rename_playlist),
+                confirmButtonText = stringResource(id = R.string.save_button),
                 initialValue = playlistToRename.name,
                 onDismiss = { onIntent(PlaylistIntent.OnDismissRenamePlaylistDialog) },
                 onConfirm = { newName ->
@@ -152,7 +153,7 @@ private fun PlaylistItem(
             )
             val songCount = Converters().fromString(playlist.songIdsJson).size
             Text(
-                text = "$songCount songs",
+                text = "$songCount ${stringResource(id = R.string.songs)}",
                 color = Color.LightGray,
                 fontSize = 14.sp
             )
@@ -171,7 +172,7 @@ private fun PlaylistItem(
                 modifier = Modifier.background(Color.DarkGray)
             ) {
                 CustomMenuItem(
-                    text = "Rename",
+                    text = stringResource(id = R.string.rename_button),
                     iconResId = R.drawable.rename,
                     onClick = {
                         onIntent(PlaylistIntent.OnRenamePlaylistClick(playlist))
@@ -180,7 +181,7 @@ private fun PlaylistItem(
                 )
                 HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                 CustomMenuItem(
-                    text = "Remove Playlist",
+                    text = stringResource(id = R.string.remove_playlist),
                     iconResId = R.drawable.remove,
                     onClick = {
                         onIntent(PlaylistIntent.OnRemovePlaylist(playlist))
@@ -228,7 +229,7 @@ private fun PlaylistGridItem(
                     modifier = Modifier.background(Color.DarkGray)
                 ) {
                     CustomMenuItem(
-                        text = "Rename",
+                        text = stringResource(id = R.string.rename_button),
                         iconResId = R.drawable.rename,
                         onClick = {
                             onIntent(PlaylistIntent.OnRenamePlaylistClick(playlist))
@@ -237,7 +238,7 @@ private fun PlaylistGridItem(
                     )
                     HorizontalDivider(color = Color.Gray.copy(alpha=0.2f))
                     CustomMenuItem(
-                        text = "Remove Playlist",
+                        text = stringResource(id = R.string.remove_playlist),
                         iconResId = R.drawable.remove,
                         onClick = {
                             onIntent(PlaylistIntent.OnRemovePlaylist(playlist))
@@ -270,7 +271,7 @@ private fun PlaylistGridItem(
 private fun EmptyPlaylistView(onIntent: (PlaylistIntent) -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(text = "You don't have any playlists.\nClick the \"+\" button to add", color = Color.Gray, fontSize = 16.sp, textAlign = TextAlign.Center)
+            Text(text = stringResource(id = R.string.no_playlists), color = Color.Gray, fontSize = 16.sp, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(24.dp))
             Box(
                 modifier = Modifier
@@ -298,7 +299,7 @@ private fun PlaylistTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "My Playlists",
+            text = stringResource(id = R.string.my_playlists),
             color = Color.White,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
@@ -345,7 +346,7 @@ private fun PlaylistActionDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
-                    placeholder = { Text("Give your playlist a title", color = Color.Gray) },
+                    placeholder = { Text(stringResource(id = R.string.give_playlist_title), color = Color.Gray) },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
@@ -368,7 +369,7 @@ private fun PlaylistActionDialog(
                             .padding(vertical = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Cancel", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(stringResource(id = R.string.cancel), color = Color.White, fontWeight = FontWeight.Bold)
                     }
                     HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = Color.Gray.copy(alpha = 0.3f))
                     Box(
@@ -384,9 +385,6 @@ private fun PlaylistActionDialog(
         }
     }
 }
-
-
-
 
 @Preview(name = "Create Dialog", showBackground = true)
 @Composable

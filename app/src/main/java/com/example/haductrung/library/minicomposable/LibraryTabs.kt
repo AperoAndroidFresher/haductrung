@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.haductrung.R
 import com.example.haductrung.library.LibraryTab
 
 @Composable
@@ -30,12 +32,12 @@ fun LibraryTabs(
         horizontalArrangement = Arrangement.Center
     ) {
         TabButton(
-            text = "Local",
+            text = stringResource(id = R.string.local),
             isSelected = selectedTab == LibraryTab.LOCAL,
             onClick = { onTabSelected(LibraryTab.LOCAL) }
         )
         TabButton(
-            text = "Remote",
+            text = stringResource(id = R.string.remote),
             isSelected = selectedTab == LibraryTab.REMOTE,
             onClick = { onTabSelected(LibraryTab.REMOTE) }
         )

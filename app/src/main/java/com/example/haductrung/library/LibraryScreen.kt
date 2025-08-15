@@ -20,9 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.haductrung.R
@@ -30,6 +30,8 @@ import com.example.haductrung.library.minicomposable.CustomMenuItem
 import com.example.haductrung.library.minicomposable.LibraryTabs
 import com.example.haductrung.library.minicomposable.SongGridItem
 import com.example.haductrung.library.minicomposable.SongItem
+import com.example.haductrung.musicPlayerBar.PlayerUiIntent
+import com.example.haductrung.playback.PlayerManager
 import com.example.haductrung.repository.Song
 
 
@@ -37,6 +39,7 @@ import com.example.haductrung.repository.Song
 fun LibraryScreen(
     state: LibraryState,
     onIntent: (LibraryIntent) -> Unit,
+    onPlaySong: (Song) -> Unit
 ) {
 //    val activity = (LocalActivity.current)
 //    BackHandler {
@@ -56,7 +59,7 @@ fun LibraryScreen(
                     .padding(vertical = 8.dp)
             ) {
                 Text(
-                    "Library",
+                    stringResource(id = R.string.library),
                     color = Color.White,
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
@@ -101,19 +104,26 @@ fun LibraryScreen(
                     if (state.isGridView) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 100.dp)
                         ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
+                                val isSelected = song1.id == state.selectedSongId
                                 SongGridItem(
                                     song = song1,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        onIntent(LibraryIntent.OnSongSelected(song1.id))
+                                        PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song1))
+                                    },
                                     onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                                     isMenuExpanded = (state.songWithMenu == song1.id),
                                     onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                     menuContent = {
 
                                         CustomMenuItem(
-                                            text = "Add to playlist",
+                                            text = stringResource(id = R.string.add_to_playlist),
                                             iconResId = R.drawable.addplaylist,
                                             onClick = {
                                                 onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
@@ -121,7 +131,7 @@ fun LibraryScreen(
                                             }
                                         )
                                         CustomMenuItem(
-                                            text = "Share",
+                                            text =  stringResource(id = R.string.share),
                                             iconResId = R.drawable.share,
                                             onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                         )
@@ -130,18 +140,27 @@ fun LibraryScreen(
                             }
                         }
                     } else {
-                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 100.dp)
+                        ) {
                             items(state.songList.size) { index ->
                                 val song1 = state.songList[index]
+                                val isSelected = song1.id == state.selectedSongId
                                 SongItem(
                                     song = song1,
+                                    isSelected = isSelected,
+                                    onClick = {
+                                        onIntent(LibraryIntent.OnSongSelected(song1.id))
+                                        PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song1))
+                                    },
                                     onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song1)) },
                                     isMenuExpanded = (state.songWithMenu == song1.id),
                                     onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                     isSortMode = state.isSortMode,
                                     menuContent = {
                                         CustomMenuItem(
-                                            text = "Add to playlist",
+                                            text = stringResource(id = R.string.add_to_playlist),
                                             iconResId = R.drawable.addplaylist,
                                             onClick = {
                                                 onIntent(LibraryIntent.OnAddToPlaylistClick(song1))
@@ -149,7 +168,7 @@ fun LibraryScreen(
                                             }
                                         )
                                         CustomMenuItem(
-                                            text = "Share",
+                                            text = stringResource(id = R.string.share),
                                             iconResId = R.drawable.share,
                                             onClick = { onIntent(LibraryIntent.OnDismissMenu) }
                                         )
@@ -175,17 +194,24 @@ fun LibraryScreen(
                             if (state.isGridView) {
                                 LazyVerticalGrid(
                                     columns = GridCells.Fixed(2),
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 100.dp)
                                 ) {
                                     items(remoteState.songs) { song ->
+                                        val isSelected = song.id == state.selectedSongId
                                         SongGridItem(
                                             song = song,
+                                            isSelected = isSelected,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnSongSelected(song.id))
+                                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                            },
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             menuContent = {
                                                 CustomMenuItem(
-                                                    text = "Add to playlist",
+                                                    text = stringResource(id = R.string.add_to_playlist),
                                                     iconResId = R.drawable.addplaylist,
                                                     onClick = {
                                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song))
@@ -197,18 +223,27 @@ fun LibraryScreen(
                                     }
                                 }
                             } else {
-                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(bottom = 100.dp)
+                                ) {
                                     items(remoteState.songs) { song ->
+                                        val isSelected = song.id == state.selectedSongId
                                         SongItem(
                                             song = song,
                                             isSortMode = false,
+                                            isSelected = isSelected,
+                                            onClick = {
+                                                onIntent(LibraryIntent.OnSongSelected(song.id))
+                                                PlayerManager.viewModel.processIntent(PlayerUiIntent.PlaySong(song))
+                                            },
                                             isMenuExpanded = (state.songWithMenu == song.id),
                                             onDismissMenu = { onIntent(LibraryIntent.OnDismissMenu) },
                                             onMoreClick = { onIntent(LibraryIntent.OnMoreClick(song)) },
                                             menuContent = {
 
                                                 CustomMenuItem(
-                                                    text = "Add to playlist",
+                                                    text = stringResource(id = R.string.add_to_playlist),
                                                     iconResId = R.drawable.addplaylist,
                                                     onClick = {
                                                         onIntent(LibraryIntent.OnAddToPlaylistClick(song))
@@ -239,7 +274,7 @@ fun LibraryScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.clickable { onIntent(LibraryIntent.OnRequestPermissionAgain) }
             ) {
-                Text("Please grant access permission in settings", color = Color.White)
+                Text(stringResource(id = R.string.grant_permission), color = Color.White)
             }
 
         }
@@ -259,7 +294,7 @@ private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No internet connection,\nplease check your\n connection again",
+            text = stringResource(id = R.string.errormessage),
             color = Color.White,
             textAlign = TextAlign.Center,
             fontSize = 20.sp
@@ -270,29 +305,12 @@ private fun ErrorView(onIntent: (LibraryIntent) -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C2CB)),
             shape = RoundedCornerShape(16)
         ) {
-            Text(text = "Try again", color = Color.White)
+            Text(text = stringResource(id = R.string.try_again), color = Color.White)
         }
     }
 }
 
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
-@Composable
-private fun LibraryScreenWithTabsPreview() {
-    val sampleSongs = listOf(
-        Song(1, "Blinding Lights", "The Weeknd", "3:20", 200000, "", null),
-        Song(2, "As It Was", "Harry Styles", "2:47", 167000, "", null)
-    )
 
-    LibraryScreen(
-        state = LibraryState(
-            hasPermission = true,
-            songList = sampleSongs,
-            selectedTab = LibraryTab.REMOTE,
-             remoteState = RemoteState.Error("đ")
-        ),
-        onIntent = {}
-    )
-}
 
 
